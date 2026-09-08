@@ -67,6 +67,13 @@
             justify-content: center;
             margin: 0 auto;
             box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        /* Difficulty Increase Flash */
+        #game-board.danger-pulse {
+            border-color: rgba(249, 115, 22, 0.8) !important;
+            box-shadow: inset 0 0 60px rgba(249, 115, 22, 0.4) !important;
         }
 
         .safe-zone {
@@ -153,16 +160,16 @@
     <!-- START SCREEN -->
     <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-8 text-center transition-opacity duration-500">
         <h1 class="text-4xl font-light tracking-widest-xl mb-2">EQUILIBRIUM</h1>
-        <p class="text-indigo-300 text-xs tracking-widest uppercase mb-6">v4.0 Local</p>
+        <p class="text-indigo-300 text-xs tracking-widest uppercase mb-6">v5.0 Overdrive</p>
         <p class="text-sm text-gray-400 mb-8 max-w-xs font-light">
-            Keep the core balanced. Hold it in the exact center to double your multiplier. Walk to increase baseline multiplier.
+            Hold it in the exact center to double your multiplier. Walk to increase baseline multiplier. <br><br> <span class="text-orange-400 font-semibold">Warning:</span> Physics sensitivity strictly increases every 10 seconds.
         </p>
         <button id="start-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
             INITIALIZE SENSORS
         </button>
         
         <!-- Local Highscore Display -->
-        <div class="mt-12 glass-panel p-4 w-full max-w-xs">
+        <div class="mt-8 glass-panel p-4 w-full max-w-xs">
             <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Local Best</p>
             <div class="flex justify-between items-center px-2">
                 <span id="local-best-name" class="font-semibold text-gray-300 tracking-widest">---</span>
@@ -224,26 +231,38 @@
         </div>
 
         <!-- Telemetry Data -->
-        <div class="grid grid-cols-2 gap-4 mt-8">
-            <div class="glass-panel p-4 flex flex-col justify-center">
-                <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+        <div class="grid grid-cols-3 gap-3 mt-8">
+            <div class="glass-panel p-3 flex flex-col justify-center text-center">
+                <span class="text-[9px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
-                    Distance
+                    Dist
                 </span>
-                <div class="flex items-end gap-1">
-                    <span id="ui-distance" class="text-2xl font-semibold">0.0</span>
-                    <span class="text-gray-400 text-sm mb-0.5">m</span>
+                <div class="flex justify-center items-end gap-1">
+                    <span id="ui-distance" class="text-xl font-semibold">0.0</span>
+                    <span class="text-gray-400 text-xs mb-0.5">m</span>
                 </div>
             </div>
             
-            <div class="glass-panel p-4 flex flex-col justify-center">
-                <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+            <div class="glass-panel p-3 flex flex-col justify-center text-center">
+                <span class="text-[9px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Time
                 </span>
-                <div class="flex items-end gap-1">
-                    <span id="ui-time" class="text-2xl font-semibold">0</span>
-                    <span class="text-gray-400 text-sm mb-0.5">s</span>
+                <div class="flex justify-center items-end gap-1">
+                    <span id="ui-time" class="text-xl font-semibold">0</span>
+                    <span class="text-gray-400 text-xs mb-0.5">s</span>
+                </div>
+            </div>
+
+            <!-- NEW SENSITIVITY METER -->
+            <div class="glass-panel p-3 flex flex-col justify-center text-center">
+                <span class="text-[9px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                    <svg class="w-3 h-3 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Sens
+                </span>
+                <div class="flex justify-center items-end gap-1">
+                    <span id="ui-sensitivity" class="text-xl font-semibold text-orange-400 transition-colors duration-300">1.0</span>
+                    <span class="text-gray-400 text-xs mb-0.5">x</span>
                 </div>
             </div>
         </div>
@@ -259,7 +278,7 @@
         })], { type: 'application/json' });
         document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
 
-        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v3').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v5').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
         if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' })));
     </script>
 
@@ -282,7 +301,6 @@
             }
         }
         
-        // Initial Load
         loadHighscore();
 
         // DOM Elements
@@ -301,16 +319,20 @@
             uiMultiplier: document.getElementById('ui-multiplier'),
             uiDistance: document.getElementById('ui-distance'),
             uiTime: document.getElementById('ui-time'),
+            uiSensitivity: document.getElementById('ui-sensitivity'),
             finalScore: document.getElementById('final-score'),
             hsEntry: document.getElementById('highscore-entry'),
             playerName: document.getElementById('player-name'),
             savedMsg: document.getElementById('score-saved-msg')
         };
 
+        const BASE_PHYSICS_SENSITIVITY = 0.05;
+
         let state = {
             isPlaying: false, score: 0, baseMultiplier: 1.0, currentMultiplier: 1.0,
             distanceWalked: 0, timeElapsed: 0, startTime: 0,
-            x: 0, y: 0, vx: 0, vy: 0,
+            x: 0, y: 0, vx: 0, vy: 0, 
+            displaySensitivity: 1.0, physicsSensitivity: 0.05,
             startLat: null, startLon: null, geoWatchId: null, animFrame: null,
             shrapnelElements: []
         };
@@ -330,9 +352,9 @@
             let x = Math.max(-90, Math.min(90, e.gamma || 0));
             let y = Math.max(-90, Math.min(90, e.beta || 0));
             
-            // Apply velocity
-            state.vx += x * 0.05;
-            state.vy += y * 0.05;
+            // Apply velocity using explicitly calculated physics sensitivity
+            state.vx += x * state.physicsSensitivity;
+            state.vy += y * state.physicsSensitivity;
             
             // Friction
             state.vx *= 0.94;
@@ -409,8 +431,39 @@
                 DOM.uiMultiplier.classList.remove('multiplier-glow');
             }
 
-            // Time & Score
+            // Time & Score calculation
             state.timeElapsed = Math.floor((Date.now() - state.startTime) / 1000);
+            
+            // ======== DIFFICULTY SCALING ========
+            const tensPassed = Math.floor(state.timeElapsed / 10);
+            const minsPassed = Math.floor(state.timeElapsed / 60);
+            
+            // Base 1.0 + (0.1 every 10 sec) + (0.6 every 60 sec)
+            // Example at 60s: 1.0 + 0.6 + 0.6 = 2.2x Sensitivity Jump!
+            const newDisplaySens = 1.0 + (tensPassed * 0.1) + (minsPassed * 0.6);
+            
+            // Float precision rounding safety
+            const safeSens = parseFloat(newDisplaySens.toFixed(1));
+
+            if (safeSens !== state.displaySensitivity) {
+                state.displaySensitivity = safeSens;
+                
+                // Scale the core physics multiplier
+                state.physicsSensitivity = BASE_PHYSICS_SENSITIVITY * state.displaySensitivity;
+                
+                // Update UI visually
+                DOM.uiSensitivity.innerText = state.displaySensitivity.toFixed(1);
+                
+                // Flash the board aggressively
+                DOM.board.classList.add('danger-pulse');
+                DOM.uiSensitivity.classList.add('text-red-500', 'scale-125');
+                setTimeout(() => {
+                    DOM.board.classList.remove('danger-pulse');
+                    DOM.uiSensitivity.classList.remove('text-red-500', 'scale-125');
+                }, 500);
+            }
+            // ===================================
+
             state.score += (state.currentMultiplier * 0.16); // Accumulate over frames (~60fps)
 
             // Update UI efficiently
@@ -447,12 +500,18 @@
 
         const startGame = () => {
             clearExplosion();
-            state = { ...state, isPlaying: true, score: 0, baseMultiplier: 1.0, currentMultiplier: 1.0, distanceWalked: 0, timeElapsed: 0, startTime: Date.now(), x: 0, y: 0, vx: 0, vy: 0, startLat: null, startLon: null };
+            state = { 
+                ...state, isPlaying: true, score: 0, baseMultiplier: 1.0, currentMultiplier: 1.0, 
+                distanceWalked: 0, timeElapsed: 0, startTime: Date.now(), x: 0, y: 0, vx: 0, vy: 0, 
+                startLat: null, startLon: null,
+                displaySensitivity: 1.0, physicsSensitivity: BASE_PHYSICS_SENSITIVITY // Reset difficulty
+            };
             
             DOM.uiScore.innerText = '0';
             DOM.uiMultiplier.innerText = 'x1.0';
             DOM.uiDistance.innerText = '0.0';
             DOM.uiTime.innerText = '0';
+            DOM.uiSensitivity.innerText = '1.0'; // Reset sensitivity UI
             DOM.particle.classList.remove('centered');
             DOM.uiMultiplier.classList.remove('multiplier-glow');
 
@@ -485,7 +544,7 @@
                     DOM.gameUI.classList.add('hidden');
                     DOM.gameOverScreen.classList.remove('hidden');
                 }, 1000);
-            }, 1000); // Delay to watch explosion
+            }, 1000); 
         };
 
         // Local Storage Save Function
@@ -536,3 +595,4 @@
     </script>
 </body>
 </html>
+
