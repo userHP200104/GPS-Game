@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Equilibrium 2.0</title>
+    <title>Equilibrium</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22%23ff7eb3%22/><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22none%22 stroke=%22%23ec4899%22 stroke-width=%224%22 opacity=%220.5%22/></svg>">
+    <!-- Dynamic Manifest Link for PWA -->
     <link id="manifest-link" rel="manifest" href="">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -150,7 +153,7 @@
     <!-- START SCREEN -->
     <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-8 text-center transition-opacity duration-500">
         <h1 class="text-4xl font-light tracking-widest-xl mb-2">EQUILIBRIUM</h1>
-        <p class="text-indigo-300 text-xs tracking-widest uppercase mb-6">v2.0 Quantum</p>
+        <p class="text-indigo-300 text-xs tracking-widest uppercase mb-6">v3.0 Local</p>
         <p class="text-sm text-gray-400 mb-8 max-w-xs font-light">
             Keep the core balanced. Hold it in the exact center to double your multiplier. Walk to increase baseline multiplier.
         </p>
@@ -158,12 +161,12 @@
             INITIALIZE SENSORS
         </button>
         
-        <!-- Global Highscore Display -->
+        <!-- Local Highscore Display -->
         <div class="mt-12 glass-panel p-4 w-full max-w-xs">
-            <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Global Highscore</p>
+            <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Local Best</p>
             <div class="flex justify-between items-center px-2">
-                <span id="global-best-name" class="font-semibold text-gray-300 tracking-widest">---</span>
-                <span id="global-best-score" class="font-semibold text-indigo-400">0</span>
+                <span id="local-best-name" class="font-semibold text-gray-300 tracking-widest">---</span>
+                <span id="local-best-score" class="font-semibold text-indigo-400">0</span>
             </div>
         </div>
     </div>
@@ -186,10 +189,10 @@
                 <p class="text-xs text-[#ff7eb3] uppercase tracking-widest mb-2">New Personal Best!</p>
                 <input type="text" id="player-name" maxlength="3" placeholder="AAA" class="w-24 py-2 uppercase mb-3" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
                 <button id="save-score-btn" class="px-6 py-2 bg-indigo-600/50 hover:bg-indigo-500 text-white rounded-full text-sm font-semibold tracking-wide w-full border border-indigo-400/50">
-                    SAVE TO CLOUD
+                    SAVE TO DEVICE
                 </button>
             </div>
-            <p id="score-saved-msg" class="text-xs text-green-400 hidden mt-4">Score Synced.</p>
+            <p id="score-saved-msg" class="text-xs text-green-400 hidden mt-4">Score Saved.</p>
         </div>
 
         <button id="restart-btn" class="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/20">
@@ -250,63 +253,37 @@
     <script>
         const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#050507"/><circle cx="256" cy="256" r="150" stroke="#6366f1" stroke-width="20" fill="none"/><circle cx="256" cy="256" r="40" fill="#fff"/></svg>`;
         const manifestBlob = new Blob([JSON.stringify({
-            name: "Equilibrium 2", short_name: "Equil2", start_url: "./", display: "standalone",
+            name: "Equilibrium", short_name: "Equil", start_url: "./", display: "standalone",
             background_color: "#050507", theme_color: "#050507",
             icons: [{ src: 'data:image/svg+xml;base64,' + btoa(iconSvg), sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }]
         })], { type: 'application/json' });
         document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
 
-        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v2').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v3').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
         if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' })));
     </script>
 
-    <!-- Main Game & Firebase Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- Main Game Logic -->
+    <script>
+        // Local Storage Handling
+        let localBestData = { name: '---', score: 0 };
+        const LS_KEY = 'equilibrium_highscore';
 
-        // Firebase Initialization
-        let firebaseConfig = {};
-        try { firebaseConfig = JSON.parse(__firebase_config); } catch (e) { console.warn("Using default local env"); }
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'equilibrium-game-id';
-        let currentUser = null;
-
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
+        function loadHighscore() {
+            const saved = localStorage.getItem(LS_KEY);
+            if (saved) {
+                try {
+                    localBestData = JSON.parse(saved);
+                    document.getElementById('local-best-name').innerText = localBestData.name;
+                    document.getElementById('local-best-score').innerText = localBestData.score.toLocaleString();
+                } catch(e) {
+                    console.error("Could not parse highscore", e);
                 }
-            } catch(e) { console.error("Auth init failed", e); }
-        };
-        initAuth();
-
-        let globalBestScore = 0;
-
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                // Listen to Highscores Collection
-                const hsRef = collection(db, 'artifacts', appId, 'public', 'data', 'highscores');
-                onSnapshot(hsRef, (snapshot) => {
-                    let best = { name: '---', score: 0 };
-                    // Parse all documents in memory to find max (No complex queries rule)
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        if (data.score > best.score) best = data;
-                    });
-                    
-                    globalBestScore = best.score;
-                    document.getElementById('global-best-name').innerText = best.name;
-                    document.getElementById('global-best-score').innerText = best.score.toLocaleString();
-                }, (error) => console.error("Snapshot error:", error));
             }
-        });
+        }
+        
+        // Initial Load
+        loadHighscore();
 
         // DOM Elements
         const DOM = {
@@ -495,11 +472,10 @@
             DOM.savedMsg.classList.add('hidden');
             DOM.playerName.value = '';
             DOM.saveBtn.disabled = false;
-            DOM.saveBtn.innerText = 'SAVE TO CLOUD';
+            DOM.saveBtn.innerText = 'SAVE TO DEVICE';
 
-            // Show input if it's better than current global best, OR if they just got a decent score and haven't saved before.
-            // For fun, we'll allow anyone > 100 points to save their score.
-            if (finalIntScore > 100) {
+            // Show input if it's better than current local best
+            if (finalIntScore > localBestData.score) {
                 DOM.hsEntry.classList.remove('hidden');
             }
 
@@ -512,29 +488,22 @@
             }, 1000); // Delay to watch explosion
         };
 
-        // Firebase Save Function
-        DOM.saveBtn.addEventListener('click', async () => {
+        // Local Storage Save Function
+        DOM.saveBtn.addEventListener('click', () => {
             const name = DOM.playerName.value.trim().toUpperCase();
-            if (name.length !== 3 || !currentUser) return;
+            if (name.length !== 3) return;
             
-            DOM.saveBtn.disabled = true;
-            DOM.saveBtn.innerText = 'SAVING...';
+            const newBest = {
+                name: name,
+                score: Math.floor(state.score),
+                timestamp: Date.now()
+            };
 
-            try {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'highscores'), {
-                    userId: currentUser.uid,
-                    name: name,
-                    score: Math.floor(state.score),
-                    timestamp: Date.now()
-                });
-                
-                DOM.hsEntry.classList.add('hidden');
-                DOM.savedMsg.classList.remove('hidden');
-            } catch (e) {
-                console.error("Error saving score", e);
-                DOM.saveBtn.innerText = 'ERROR - TRY AGAIN';
-                DOM.saveBtn.disabled = false;
-            }
+            localStorage.setItem(LS_KEY, JSON.stringify(newBest));
+            loadHighscore(); // Update UI
+            
+            DOM.hsEntry.classList.add('hidden');
+            DOM.savedMsg.classList.remove('hidden');
         });
 
         // Permissions & Hardware Listeners
