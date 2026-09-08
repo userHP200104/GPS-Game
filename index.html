@@ -81,7 +81,8 @@
             justify-content: center;
             margin: 0 auto;
             box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
-            transition: width 0.3s linear, height 0.3s linear, border-color 0.4s ease, box-shadow 0.4s ease;
+            /* Linear transition for smooth dynamic shrinking */
+            transition: width 0.1s linear, height 0.1s linear, border-color 0.4s ease, box-shadow 0.4s ease;
         }
 
         body.death-mode #game-board {
@@ -93,6 +94,13 @@
             border-color: rgba(249, 115, 22, 0.8) !important;
             box-shadow: inset 0 0 80px rgba(249, 115, 22, 0.5) !important;
             border-style: solid;
+        }
+        
+        #game-board.higgs-barrier {
+            border-color: rgba(234, 179, 8, 0.8) !important;
+            box-shadow: inset 0 0 40px rgba(234, 179, 8, 0.4), 0 0 20px rgba(234, 179, 8, 0.2) !important;
+            border-style: solid;
+            border-width: 4px;
         }
 
         #game-board.danger-pulse {
@@ -157,6 +165,7 @@
         .pu-ion { background: #f97316; box-shadow: 0 0 20px #ea580c; text-shadow: 0 0 5px white; }
         .pu-quark { background: #000; border: 2px solid #ef4444; color: #ef4444; box-shadow: 0 0 20px #dc2626; }
         .pu-higgs { background: #eab308; box-shadow: 0 0 20px #ca8a04; color: black; }
+        .pu-plus5 { background: #22c55e; box-shadow: 0 0 20px #16a34a; }
 
         .multiplier-glow {
             text-shadow: 0 0 15px #ec4899;
@@ -203,6 +212,27 @@
         /* Modal Scrollbar hidden */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Floating Score Text Animation */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-30px) scale(1.2); opacity: 0; }
+        }
+        .score-float {
+            position: absolute;
+            color: #22c55e;
+            font-weight: 800;
+            font-size: 18px;
+            text-shadow: 0 0 10px #16a34a;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 50;
+        }
+        .score-float-large {
+            color: #f97316;
+            font-size: 24px;
+            text-shadow: 0 0 15px #ea580c;
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen relative">
@@ -212,7 +242,7 @@
     <!-- START SCREEN -->
     <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-4 sm:m-6 p-6 text-center transition-opacity duration-500 overflow-y-auto no-scrollbar">
         <h1 class="text-4xl font-light tracking-widest-xl mb-2 mt-8">EQUILIBRIUM</h1>
-        <p class="text-indigo-300 text-[10px] tracking-widest uppercase mb-8">v7.0 Trinity</p>
+        <p class="text-indigo-300 text-[10px] tracking-widest uppercase mb-8">v7.1 Trinity</p>
         
         <div class="flex flex-col gap-3 w-full max-w-xs mb-8">
             <button id="start-classic-btn" class="px-6 py-3 bg-white text-black rounded-full text-sm font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
@@ -254,39 +284,43 @@
     </div>
 
     <!-- ARCADE INFO MODAL -->
-    <div id="arcade-info-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md hidden transition-opacity duration-300 p-6">
-        <h2 class="text-2xl font-light text-blue-400 tracking-widest-xl mb-6 text-center">ARCADE PROTOCOL</h2>
-        <p class="text-xs text-gray-400 mb-8 max-w-xs text-center leading-relaxed">
-            Safe area expanded. Anomalies detected. Intercept them for tactical advantage.
+    <div id="arcade-info-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md hidden transition-opacity duration-300 p-6 overflow-y-auto no-scrollbar">
+        <h2 class="text-2xl font-light text-blue-400 tracking-widest-xl mb-4 mt-10 text-center">ARCADE PROTOCOL</h2>
+        <p class="text-xs text-gray-400 mb-6 max-w-xs text-center leading-relaxed">
+            Safe area expanded. Anomalies have a 20% chance to spawn every 10 seconds.
         </p>
 
-        <div class="flex flex-col gap-4 w-full max-w-sm mb-10">
-            <div class="flex items-center gap-4 glass-panel p-3">
-                <div class="w-8 h-8 rounded-full bg-blue-500 shadow-[0_0_15px_#2563eb] flex items-center justify-center text-xs font-bold text-white shrink-0">x2</div>
-                <div class="text-xs text-gray-300"><span class="text-blue-400 font-bold">2x MULTIPLIER:</span> Doubles your current multiplier for 5 seconds.</div>
+        <div class="flex flex-col gap-3 w-full max-w-sm mb-8">
+            <div class="flex items-center gap-3 glass-panel p-2.5">
+                <div class="w-7 h-7 rounded-full bg-blue-500 shadow-[0_0_15px_#2563eb] flex items-center justify-center text-xs font-bold text-white shrink-0">x2</div>
+                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-blue-400 font-bold">2x MULTIPLIER:</span> Doubles multiplier for 5s.</div>
             </div>
-            <div class="flex items-center gap-4 glass-panel p-3">
-                <div class="w-8 h-8 rounded-full bg-orange-500 shadow-[0_0_15px_#ea580c] flex items-center justify-center text-xs font-bold text-white shrink-0">⚡</div>
-                <div class="text-xs text-gray-300"><span class="text-orange-400 font-bold">ION:</span> Destabilizes and brutally shrinks the safe area for 10 seconds.</div>
+            <div class="flex items-center gap-3 glass-panel p-2.5 border-orange-500/30 bg-orange-950/20">
+                <div class="w-7 h-7 rounded-full bg-orange-500 shadow-[0_0_15px_#ea580c] flex items-center justify-center text-xs font-bold text-white shrink-0">⚡</div>
+                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-orange-400 font-bold">ION:</span> Slowly shrinks area for 10s. Survive for +100pts.</div>
             </div>
-            <div class="flex items-center gap-4 glass-panel p-3 border-red-500/30 bg-red-950/20">
-                <div class="w-8 h-8 rounded-full bg-black border-2 border-red-500 shadow-[0_0_15px_#dc2626] flex items-center justify-center text-xs font-bold text-red-500 shrink-0">Q</div>
-                <div class="text-xs text-gray-300"><span class="text-red-500 font-bold">QUARK:</span> Instant containment failure. Avoid at all costs.</div>
+            <div class="flex items-center gap-3 glass-panel p-2.5 border-red-500/30 bg-red-950/20">
+                <div class="w-7 h-7 rounded-full bg-black border-2 border-red-500 shadow-[0_0_15px_#dc2626] flex items-center justify-center text-xs font-bold text-red-500 shrink-0">Q</div>
+                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-red-500 font-bold">QUARK:</span> Instant containment failure. Avoid!</div>
             </div>
-            <div class="flex items-center gap-4 glass-panel p-3">
-                <div class="w-8 h-8 rounded-full bg-yellow-500 shadow-[0_0_15px_#ca8a04] flex items-center justify-center text-xs font-bold text-black shrink-0">H</div>
-                <div class="text-xs text-gray-300"><span class="text-yellow-500 font-bold">HIGGS BOSON:</span> Grants invincibility to containment walls for 10 seconds.</div>
+            <div class="flex items-center gap-3 glass-panel p-2.5">
+                <div class="w-7 h-7 rounded-full bg-yellow-500 shadow-[0_0_15px_#ca8a04] flex items-center justify-center text-xs font-bold text-black shrink-0">H</div>
+                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-yellow-500 font-bold">HIGGS BOSON:</span> Creates a solid barrier at the perimeter for 10s.</div>
+            </div>
+            <div class="flex items-center gap-3 glass-panel p-2.5">
+                <div class="w-7 h-7 rounded-full bg-green-500 shadow-[0_0_15px_#16a34a] flex items-center justify-center text-xs font-bold text-white shrink-0">+5</div>
+                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-green-500 font-bold">PLUS 5:</span> Instantly grants 5 points.</div>
             </div>
         </div>
 
-        <button id="proceed-arcade-btn" class="px-8 py-4 bg-blue-600 text-white rounded-full font-semibold tracking-wide hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+        <button id="proceed-arcade-btn" class="px-8 py-4 bg-blue-600 text-white rounded-full font-semibold tracking-wide hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.4)] mb-8">
             PROCEED
         </button>
     </div>
 
     <!-- OPAQUE COUNTDOWN OVERLAY -->
     <div id="countdown-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md hidden transition-opacity duration-300">
-        <div id="countdown" class="text-white text-8xl font-light">3</div>
+        <div id="countdown" class="text-white text-6xl font-light">3</div>
         <p class="text-gray-400 tracking-widest-xl mt-4 uppercase text-sm" id="countdown-msg">Prepare to Balance</p>
     </div>
 
@@ -348,11 +382,11 @@
         </header>
 
         <!-- Play Area -->
-        <div class="flex-1 flex items-center justify-center relative overflow-hidden">
+        <div class="flex-1 flex items-center justify-center relative overflow-hidden" id="board-container">
             <div id="game-board">
                 <div class="center-target"></div>
                 <div id="particle"></div>
-                <!-- Powerups injected here -->
+                <!-- Powerups/Floating Text injected here -->
             </div>
         </div>
 
@@ -395,7 +429,7 @@
         })], { type: 'application/json' });
         document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
 
-        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v7').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v7-1').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
         if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' })));
     </script>
 
@@ -468,7 +502,7 @@
         const BASE_PHYSICS_SENSITIVITY = 0.05;
         const CLASSIC_MAX_RADIUS = 128; // 140px board - 12px particle
         const ARCADE_MAX_RADIUS = 158;  // 170px board - 12px particle
-        const ION_MAX_RADIUS = 50;      // Severely shrunk board
+        const ION_MAX_RADIUS = 50;      // Shrink target
         
         let state = {
             isPlaying: false, isPaused: false, isCountingDown: false, mode: 'CLASSIC',
@@ -478,8 +512,9 @@
             currentMaxRadius: CLASSIC_MAX_RADIUS, centerAccumulator: 0,
             
             // Arcade specifics
-            powerups: [], nextSpawnTime: 3, 
+            powerups: [], lastSpawnInterval: 0, 
             effects: { x2: 0, ion: 0, higgs: 0 },
+            wasIonActive: false,
 
             animFrame: null, shrapnelElements: []
         };
@@ -487,10 +522,11 @@
         const config = { particleRadius: 12, centerRadius: 15, powerupRadius: 12 };
 
         const POWERUP_TYPES = [
-            { id: 'x2', cls: 'pu-x2', text: 'x2', weight: 40 },
-            { id: 'ion', cls: 'pu-ion', text: '⚡', weight: 25 },
-            { id: 'higgs', cls: 'pu-higgs', text: 'H', weight: 15 },
-            { id: 'quark', cls: 'pu-quark', text: 'Q', weight: 20 }
+            { id: 'x2', cls: 'pu-x2', text: 'x2', weight: 20 },
+            { id: 'quark', cls: 'pu-quark', text: 'Q', weight: 10 },
+            { id: 'ion', cls: 'pu-ion', text: '⚡', weight: 20 },
+            { id: 'higgs', cls: 'pu-higgs', text: 'H', weight: 10 },
+            { id: 'plus5', cls: 'pu-plus5', text: '+5', weight: 40 }
         ];
 
         function getRandomPowerup() {
@@ -514,6 +550,15 @@
             
             state.vx *= 0.94; // friction
             state.vy *= 0.94;
+        };
+
+        const spawnFloatingText = (text, isLarge = false) => {
+            const el = document.createElement('div');
+            el.className = `score-float ${isLarge ? 'score-float-large' : ''}`;
+            el.innerText = text;
+            el.style.transform = `translate(${state.x}px, ${state.y - 20}px)`;
+            DOM.board.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
         };
 
         // Effects
@@ -545,9 +590,12 @@
             state.shrapnelElements = [];
             state.powerups.forEach(p => p.el.remove());
             state.powerups = [];
+            // Remove lingering floating text
+            DOM.board.querySelectorAll('.score-float').forEach(el => el.remove());
+
             DOM.particle.style.display = 'block';
             DOM.particle.classList.remove('invincible');
-            DOM.board.classList.remove('ion-destabilized');
+            DOM.board.classList.remove('ion-destabilized', 'higgs-barrier');
         };
 
         const applyPowerup = (id) => {
@@ -557,8 +605,12 @@
                 state.effects.x2 = 5.0; // 5 seconds
             } else if (id === 'ion') {
                 state.effects.ion = 10.0;
+                state.wasIonActive = true;
             } else if (id === 'higgs') {
                 state.effects.higgs = 10.0;
+            } else if (id === 'plus5') {
+                state.score += 5;
+                spawnFloatingText('+5');
             }
         };
 
@@ -577,7 +629,7 @@
             // Physics Movement
             state.x += state.vx;
             state.y += state.vy;
-            const distFromCenter = Math.sqrt(state.x**2 + state.y**2);
+            let distFromCenter = Math.hypot(state.x, state.y);
 
             // ================== POWERUP LOGIC (ARCADE) ==================
             if (state.mode === 'ARCADE') {
@@ -586,29 +638,28 @@
                 if (state.effects.ion > 0) state.effects.ion -= dt;
                 if (state.effects.higgs > 0) state.effects.higgs -= dt;
 
-                // Visuals for Higgs
-                if (state.effects.higgs > 0) DOM.particle.classList.add('invincible');
-                else DOM.particle.classList.remove('invincible');
-
-                // Spawning
-                if (state.timeElapsed > state.nextSpawnTime && state.powerups.length < 3) {
-                    const type = getRandomPowerup();
-                    const el = document.createElement('div');
-                    el.className = `powerup ${type.cls}`;
-                    el.innerText = type.text;
+                // Spawning check (20% chance every 10 seconds)
+                const currentInterval = Math.floor(state.timeElapsed / 10);
+                if (currentInterval > state.lastSpawnInterval) {
+                    state.lastSpawnInterval = currentInterval;
                     
-                    // Spawn within safe area
-                    const maxSpawnRadius = state.effects.ion > 0 ? ION_MAX_RADIUS : ARCADE_MAX_RADIUS;
-                    const angle = Math.random() * Math.PI * 2;
-                    const r = Math.random() * (maxSpawnRadius - config.powerupRadius);
-                    const px = Math.cos(angle) * r;
-                    const py = Math.sin(angle) * r;
-                    
-                    el.style.transform = `translate(${px}px, ${py}px)`;
-                    DOM.board.appendChild(el);
-                    
-                    state.powerups.push({ id: type.id, el: el, x: px, y: py, life: 8.0 });
-                    state.nextSpawnTime = state.timeElapsed + 3 + Math.random() * 4;
+                    if (Math.random() <= 0.20 && state.powerups.length < 3) {
+                        const type = getRandomPowerup();
+                        const el = document.createElement('div');
+                        el.className = `powerup ${type.cls}`;
+                        el.innerText = type.text;
+                        
+                        // Spawn within whatever the current safe area is
+                        const angle = Math.random() * Math.PI * 2;
+                        const r = Math.random() * (state.currentMaxRadius - config.powerupRadius);
+                        const px = Math.cos(angle) * r;
+                        const py = Math.sin(angle) * r;
+                        
+                        el.style.transform = `translate(${px}px, ${py}px)`;
+                        DOM.board.appendChild(el);
+                        
+                        state.powerups.push({ id: type.id, el: el, x: px, y: py, life: 8.0 });
+                    }
                 }
 
                 // Powerup Collision & Lifecycle
@@ -616,7 +667,6 @@
                     let p = state.powerups[i];
                     p.life -= dt;
                     
-                    // Collision
                     if (Math.hypot(state.x - p.x, state.y - p.y) < (config.particleRadius + config.powerupRadius)) {
                         applyPowerup(p.id);
                         p.el.remove();
@@ -624,10 +674,9 @@
                         continue;
                     }
 
-                    // Decay
                     if (p.life <= 0) {
                         p.el.style.opacity = '0';
-                        setTimeout(() => p.el.remove(), 300); // fade out wait
+                        setTimeout(() => p.el.remove(), 300);
                         state.powerups.splice(i, 1);
                     }
                 }
@@ -645,21 +694,28 @@
                 state.currentMaxRadius = CLASSIC_MAX_RADIUS - (shrinkRatio * 93); // Shrinks to ~35
                 
             } else if (state.mode === 'ARCADE') {
-                newDisplaySens = 1.0; // Static base sensitivity in Arcade
+                newDisplaySens = 1.0; 
+                
+                // Ion Shrinking logic (gradual over 10 seconds)
                 if (state.effects.ion > 0) {
-                    state.currentMaxRadius = ION_MAX_RADIUS;
+                    const progress = (10.0 - state.effects.ion) / 10.0;
+                    state.currentMaxRadius = ARCADE_MAX_RADIUS - (progress * (ARCADE_MAX_RADIUS - ION_MAX_RADIUS));
                     DOM.board.classList.add('ion-destabilized');
                 } else {
+                    if (state.wasIonActive) {
+                        // Survived the Ion effect
+                        state.score += 100;
+                        spawnFloatingText('+100', true);
+                        state.wasIonActive = false;
+                    }
                     state.currentMaxRadius = ARCADE_MAX_RADIUS;
                     DOM.board.classList.remove('ion-destabilized');
                 }
             } else {
-                // Classic
                 newDisplaySens = 1.0 + (tensPassed * 0.1) + (Math.floor(state.timeElapsed / 60) * 0.6);
                 state.currentMaxRadius = CLASSIC_MAX_RADIUS; 
             }
 
-            // Sync visual board size
             const visualBoardSize = (state.currentMaxRadius + config.particleRadius) * 2;
             DOM.board.style.width = `${visualBoardSize}px`;
             DOM.board.style.height = `${visualBoardSize}px`;
@@ -680,13 +736,28 @@
             }
             // ============================================================
 
-            // Check Game Over Boundary
-            if (distFromCenter > state.currentMaxRadius) {
-                // Higgs saves you!
-                if (state.mode === 'ARCADE' && state.effects.higgs > 0) {
-                    // Push back slightly or just allow hanging outside safely.
-                    // The prompt says "invincible for 10 seconds", so we skip the game over.
-                } else {
+            // ================== BOUNDARY / HIGGS PHYSICS ================
+            if (state.mode === 'ARCADE' && state.effects.higgs > 0) {
+                DOM.particle.classList.add('invincible');
+                DOM.board.classList.add('higgs-barrier');
+                
+                if (distFromCenter > state.currentMaxRadius) {
+                    // Physical Barrier reflection/constraint
+                    const angle = Math.atan2(state.y, state.x);
+                    state.x = Math.cos(angle) * state.currentMaxRadius;
+                    state.y = Math.sin(angle) * state.currentMaxRadius;
+                    
+                    // Zero out outward momentum (slide along wall instead of bouncing crazy)
+                    state.vx *= 0.5;
+                    state.vy *= 0.5;
+                    
+                    // Re-evaluate dist for center check
+                    distFromCenter = state.currentMaxRadius; 
+                }
+            } else {
+                DOM.particle.classList.remove('invincible');
+                DOM.board.classList.remove('higgs-barrier');
+                if (distFromCenter > state.currentMaxRadius) {
                     gameOver();
                     return;
                 }
@@ -695,7 +766,7 @@
             // Apply position
             DOM.particle.style.transform = `translate(${state.x}px, ${state.y}px)`;
 
-            // ================== MULTIPLIER (NEW LOGIC) ==================
+            // ================== MULTIPLIER ==================
             const isCentered = distFromCenter < config.centerRadius;
             if (isCentered) {
                 state.centerAccumulator += dt;
@@ -707,10 +778,8 @@
             const secInCenter = Math.floor(state.centerAccumulator);
             const tensInCenter = Math.floor(state.centerAccumulator / 10);
             
-            // Base logic: 1.0 + (0.1 per sec) + (1.0 per 10 sec)
             let rawMultiplier = 1.0 + (secInCenter * 0.1) + (tensInCenter * 1.0);
             
-            // x2 Powerup Overrides
             let finalMultiplier = rawMultiplier;
             if (state.mode === 'ARCADE' && state.effects.x2 > 0) {
                 finalMultiplier *= 2;
@@ -723,10 +792,9 @@
             }
             // ============================================================
 
-            // Score Accumulation (10 base points per second)
             state.score += (finalMultiplier * 10 * dt); 
 
-            // Update UI
+            // Update UI 
             if (Math.floor(state.score) !== parseInt(DOM.uiScore.innerText.replace(/,/g, ''))) {
                 DOM.uiScore.innerText = Math.floor(state.score).toLocaleString();
             }
@@ -736,7 +804,6 @@
             }
             DOM.uiMultiplier.innerText = `x${finalMultiplier.toFixed(1)}`;
             
-            // Arcade mode telemetry overrides Sensitivity panel
             if (state.mode === 'ARCADE') {
                 if (state.effects.x2 > 0) {
                     DOM.uiSensLabel.innerText = "x2 ACTIVE";
@@ -745,13 +812,13 @@
                     DOM.uiSensitivity.className = "text-2xl font-semibold text-blue-400";
                     DOM.effectBg.className = "absolute inset-0 bg-blue-500/20 opacity-100 transition-opacity duration-300 z-0";
                 } else if (state.effects.higgs > 0) {
-                    DOM.uiSensLabel.innerText = "INVINCIBLE";
+                    DOM.uiSensLabel.innerText = "BARRIER";
                     DOM.uiSensitivity.innerText = Math.ceil(state.effects.higgs);
                     DOM.uiSensSuffix.innerText = 's';
                     DOM.uiSensitivity.className = "text-2xl font-semibold text-yellow-500";
                     DOM.effectBg.className = "absolute inset-0 bg-yellow-500/20 opacity-100 transition-opacity duration-300 z-0";
                 } else if (state.effects.ion > 0) {
-                    DOM.uiSensLabel.innerText = "UNSTABLE";
+                    DOM.uiSensLabel.innerText = "SHRINKING";
                     DOM.uiSensitivity.innerText = Math.ceil(state.effects.ion);
                     DOM.uiSensSuffix.innerText = 's';
                     DOM.uiSensitivity.className = "text-2xl font-semibold text-orange-500";
@@ -821,10 +888,10 @@
                 score: 0, timeElapsed: 0, lastFrameTime: Date.now(), centerAccumulator: 0,
                 x: 0, y: 0, vx: 0, vy: 0, 
                 displaySensitivity: 1.0, physicsSensitivity: BASE_PHYSICS_SENSITIVITY,
-                powerups: [], nextSpawnTime: 3, effects: { x2: 0, ion: 0, higgs: 0 }
+                powerups: [], lastSpawnInterval: 0, effects: { x2: 0, ion: 0, higgs: 0 },
+                wasIonActive: false
             };
             
-            // Mode visual setups
             document.body.classList.remove('death-mode', 'arcade-mode');
             if (state.mode === 'DEATH') document.body.classList.add('death-mode');
             if (state.mode === 'ARCADE') document.body.classList.add('arcade-mode');
@@ -927,7 +994,7 @@
             DOM.savedMsg.classList.remove('hidden');
         });
 
-        // Permissions & Flow Triggers
+        // Permissions & Flow
         const requestSensors = async () => {
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 const perm = await DeviceOrientationEvent.requestPermission();
