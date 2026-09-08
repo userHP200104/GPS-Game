@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Equilibrium</title>
+    <!-- Dynamic Manifest Link -->
+    <link id="manifest-link" rel="manifest" href="">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 2026 Aesthetic: Fluid, deep, and ambient */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600&display=swap');
+
+    :root {
+        --bg-color: #050507;
+        --accent-glow: rgba(99, 102, 241, 0.4);
+        --accent-glow-2: rgba(236, 72, 153, 0.3);
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-color);
+        color: #ffffff;
+        overflow: hidden;
+        touch-action: none; /* Prevent scrolling while playing */
+    }
+
+    /* Ambient Aurora Background */
+    .ambient-bg {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 150vw;
+        height: 150vw;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle at 30% 30%, var(--accent-glow), transparent 40%),
+                    radial-gradient(circle at 70% 70%, var(--accent-glow-2), transparent 40%);
+        filter: blur(80px);
+        opacity: 0.6;
+        z-index: -1;
+        animation: pulse 10s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+        0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+        100% { transform: translate(-50%, -50%) rotate(10deg) scale(1.1); }
+    }
+
+    /* Glassmorphism Bento Boxes */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+    }
+
+    /* Game Elements */
+    #game-board {
+        position: relative;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+    }
+
+    #particle {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 20px #fff, 0 0 40px #6366f1;
+        transition: transform 0.05s linear;
+    }
+
+    .safe-zone {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Typography */
+    .tracking-widest-xl { letter-spacing: 0.2em; }
+    
+    button {
+        transition: all 0.3s ease;
+    }
+    button:active {
+        transform: scale(0.95);
+    }
+</style>
+</head>
+<body class="flex flex-col h-screen w-screen relative">
+
+<div class="ambient-bg"></div>
+
+<!-- START SCREEN -->
+<div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-8 text-center">
+    <h1 class="text-4xl font-light tracking-widest-xl mb-4">EQUILIBRIUM</h1>
+    <p class="text-sm text-gray-400 mb-8 max-w-xs font-light">
+        Keep the core balanced using your device tilt. Walk in the real world to increase your score multiplier.
+    </p>
+    <button id="start-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+        INITIALIZE SENSORS
+    </button>
+    <p class="text-xs text-gray-500 mt-6 max-w-xs">Requires GPS & Device Motion permissions to play.</p>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div id="game-over-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-8 text-center hidden">
+    <h2 class="text-3xl font-light text-red-400 tracking-widest-xl mb-2">CONTAINMENT LOST</h2>
+    <p class="text-gray-400 mb-6">The core touched the perimeter.</p>
+    
+    <div class="glass-panel p-6 mb-8 w-full max-w-xs">
+        <p class="text-sm text-gray-400 uppercase tracking-wider mb-1">Final Score</p>
+        <p id="final-score" class="text-4xl font-semibold">0</p>
+        <div class="h-px bg-white/10 my-4"></div>
+        <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Distance:</span>
+            <span id="final-distance" class="text-white">0m</span>
+        </div>
+        <div class="flex justify-between text-sm mt-2">
+            <span class="text-gray-500">Time:</span>
+            <span id="final-time" class="text-white">0s</span>
+        </div>
+    </div>
+
+    <button id="restart-btn" class="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/20">
+        RECALIBRATE
+    </button>
+</div>
+
+<!-- MAIN GAME UI -->
+<div id="game-ui" class="flex-1 flex flex-col p-6 hidden opacity-0 transition-opacity duration-1000">
+    
+    <!-- Header / Stats -->
+    <header class="flex justify-between items-center mb-8">
+        <div class="glass-panel px-4 py-2 flex flex-col">
+            <span class="text-[10px] text-gray-500 uppercase tracking-wider">Score</span>
+            <span id="ui-score" class="text-xl font-semibold">0</span>
+        </div>
+        <div class="glass-panel px-4 py-2 flex flex-col items-end">
+            <span class="text-[10px] text-gray-500 uppercase tracking-wider">Multiplier</span>
+            <span id="ui-multiplier" class="text-xl font-semibold text-indigo-400">x1.0</span>
+        </div>
+    </header>
+
+    <!-- Play Area -->
+    <div class="flex-1 flex items-center justify-center relative">
+        <div id="game-board">
+            <div class="safe-zone"></div>
+            <div id="particle"></div>
+        </div>
+    </div>
+
+    <!-- Telemetry Data (Bento Box style) -->
+    <div class="grid grid-cols-2 gap-4 mt-8">
+        <div class="glass-panel p-4 flex flex-col justify-center">
+            <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Distance Traveled
+            </span>
+            <div class="flex items-end gap-1">
+                <span id="ui-distance" class="text-2xl font-semibold">0.0</span>
+                <span class="text-gray-400 text-sm mb-0.5">m</span>
+            </div>
+        </div>
+        
+        <div class="glass-panel p-4 flex flex-col justify-center">
+            <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Stability Time
+            </span>
+            <div class="flex items-end gap-1">
+                <span id="ui-time" class="text-2xl font-semibold">0</span>
+                <span class="text-gray-400 text-sm mb-0.5">s</span>
+            </div>
+        </div>
+        
+        <div class="col-span-2 glass-panel p-4 flex flex-col">
+            <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Accelerometer / Gyro Vector</span>
+            <div class="flex gap-4">
+                <div class="flex-1 bg-white/5 rounded-lg h-1.5 overflow-hidden">
+                    <div id="bar-x" class="h-full bg-indigo-500 w-1/2 transition-all duration-75"></div>
+                </div>
+                <div class="flex-1 bg-white/5 rounded-lg h-1.5 overflow-hidden">
+                    <div id="bar-y" class="h-full bg-pink-500 w-1/2 transition-all duration-75"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * PWA HACK: Inject Manifest and Service Worker dynamically via Blobs 
+     * so the single HTML file functions as a complete installable PWA.
+     */
+    function initPWA() {
+        // 1. Create Manifest Blob
+        const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#050507"/><circle cx="256" cy="256" r="150" stroke="#6366f1" stroke-width="20" fill="none"/><circle cx="256" cy="256" r="40" fill="#fff"/></svg>`;
+        const iconUrl = 'data:image/svg+xml;base64,' + btoa(iconSvg);
+        
+        const manifest = {
+            name: "Equilibrium",
+            short_name: "Equil",
+            description: "A minimal sensor-based PWA game.",
+            start_url: "./",
+            display: "standalone",
+            background_color: "#050507",
+            theme_color: "#050507",
+            icons: [
+                { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+
+        // 2. Create Service Worker Blob (Handles offline caching of this single file)
+        const swCode = `
+            const CACHE_NAME = 'equilibrium-v1';
+            self.addEventListener('install', event => {
+                self.skipWaiting();
+                event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./'])));
+            });
+            self.addEventListener('activate', event => {
+                event.waitUntil(clients.claim());
+            });
+            self.addEventListener('fetch', event => {
+                event.respondWith(
+                    caches.match(event.request).then(response => response || fetch(event.request))
+                );
+            });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl)
+                .then(() => console.log("Virtual Service Worker Registered (Offline Ready)"))
+                .catch(err => console.error("SW Registration failed:", err));
+        }
+    }
+    initPWA();
+
+    /**
+     * GAME ENGINE & LOGIC
+     */
+    const DOM = {
+        startScreen: document.getElementById('start-screen'),
+        gameOverScreen: document.getElementById('game-over-screen'),
+        gameUI: document.getElementById('game-ui'),
+        startBtn: document.getElementById('start-btn'),
+        restartBtn: document.getElementById('restart-btn'),
+        particle: document.getElementById('particle'),
+        board: document.getElementById('game-board'),
+        uiScore: document.getElementById('ui-score'),
+        uiMultiplier: document.getElementById('ui-multiplier'),
+        uiDistance: document.getElementById('ui-distance'),
+        uiTime: document.getElementById('ui-time'),
+        barX: document.getElementById('bar-x'),
+        barY: document.getElementById('bar-y'),
+        finalScore: document.getElementById('final-score'),
+        finalDistance: document.getElementById('final-distance'),
+        finalTime: document.getElementById('final-time'),
+    };
+
+    let gameState = {
+        isPlaying: false,
+        score: 0,
+        multiplier: 1.0,
+        distanceWalked: 0, // in meters
+        timeElapsed: 0, // in seconds
+        startTime: 0,
+        
+        // Sensors
+        particleX: 0,
+        particleY: 0,
+        velocityX: 0,
+        velocityY: 0,
+        
+        // GPS tracking
+        startLat: null,
+        startLon: null,
+        geoWatchId: null,
+
+        // Animation Frame
+        animFrame: null
+    };
+
+    const boardRadius = 140; // half of 280px
+    const particleRadius = 12; // half of 24px
+    const maxRadius = boardRadius - particleRadius;
+
+    // Haversine formula to calculate distance between two lat/lon points in meters
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Earth radius in meters
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    function handleOrientation(event) {
+        if (!gameState.isPlaying) return;
+
+        // Beta is front-to-back tilt [-180,180]
+        // Gamma is left-to-right tilt [-90,90]
+        let x = event.gamma || 0; 
+        let y = event.beta || 0;
+
+        // Clamp values for smoother gameplay
+        if (x > 90) x = 90;
+        if (x < -90) x = -90;
+        if (y > 90) y = 90;
+        if (y < -90) y = -90;
+
+        // Convert tilt to velocity (sensitivity multiplier)
+        gameState.velocityX += x * 0.05;
+        gameState.velocityY += y * 0.05;
+
+        // Add friction so it doesn't slide forever
+        gameState.velocityX *= 0.95;
+        gameState.velocityY *= 0.95;
+
+        // Update UI vectors
+        DOM.barX.style.width = `${Math.min(100, Math.max(0, (x + 90) / 180 * 100))}%`;
+        DOM.barY.style.width = `${Math.min(100, Math.max(0, (y + 90) / 180 * 100))}%`;
+    }
+
+    function handlePosition(position) {
+        if (!gameState.isPlaying) return;
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        if (gameState.startLat === null) {
+            gameState.startLat = lat;
+            gameState.startLon = lon;
+        } else {
+            const dist = calculateDistance(gameState.startLat, gameState.startLon, lat, lon);
+            // Update distance if it increased (avoiding GPS jitter slightly)
+            if (dist > gameState.distanceWalked) {
+                gameState.distanceWalked = dist;
+                // Multiplier increases by 0.1 for every meter walked
+                gameState.multiplier = 1.0 + (gameState.distanceWalked * 0.1);
+                DOM.uiDistance.innerText = gameState.distanceWalked.toFixed(1);
+                DOM.uiMultiplier.innerText = `x${gameState.multiplier.toFixed(1)}`;
+            }
+        }
+    }
+
+    function gameLoop() {
+        if (!gameState.isPlaying) return;
+
+        // Update Particle Position
+        gameState.particleX += gameState.velocityX;
+        gameState.particleY += gameState.velocityY;
+
+        // Calculate distance from center
+        const distFromCenter = Math.sqrt(gameState.particleX ** 2 + gameState.particleY ** 2);
+
+        // Check Collision (Game Over)
+        if (distFromCenter > maxRadius) {
+            gameOver();
+            return;
+        }
+
+        // Apply position to DOM
+        DOM.particle.style.transform = `translate(${gameState.particleX}px, ${gameState.particleY}px)`;
+
+        // Time & Score calculation
+        const now = Date.now();
+        gameState.timeElapsed = Math.floor((now - gameState.startTime) / 1000);
+        
+        // Score = Time * Multiplier (Walking increases multiplier)
+        gameState.score = Math.floor(gameState.timeElapsed * 10 * gameState.multiplier);
+
+        // Update text UI periodically
+        DOM.uiScore.innerText = gameState.score.toLocaleString();
+        DOM.uiTime.innerText = gameState.timeElapsed;
+
+        gameState.animFrame = requestAnimationFrame(gameLoop);
+    }
+
+    async function requestPermissionsAndStart() {
+        try {
+            // Request Device Orientation (Required for iOS 13+)
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const permission = await DeviceOrientationEvent.requestPermission();
+                if (permission !== 'granted') {
+                    alert('Device orientation permission is required to balance the core.');
+                    return;
+                }
+            }
+
+            // Setup Listeners
+            window.addEventListener('deviceorientation', handleOrientation);
+            
+            // Request GPS (Requires HTTPS or localhost, works seamlessly in most PWAs)
+            if ("geolocation" in navigator) {
+                gameState.geoWatchId = navigator.geolocation.watchPosition(
+                    handlePosition,
+                    (err) => console.warn("GPS Error:", err.message),
+                    { enableHighAccuracy: true, maximumAge: 0 }
+                );
+            } else {
+                console.warn("Geolocation not supported. Multiplier will remain 1x.");
+            }
+
+            startGame();
+
+        } catch (error) {
+            console.error(error);
+            alert('Sensors unavailable. Ensure you are on a mobile device or have hardware sensors enabled.');
+        }
+    }
+
+    function startGame() {
+        // Reset State
+        gameState = {
+            ...gameState,
+            isPlaying: true,
+            score: 0,
+            multiplier: 1.0,
+            distanceWalked: 0,
+            timeElapsed: 0,
+            startTime: Date.now(),
+            particleX: 0,
+            particleY: 0,
+            velocityX: 0,
+            velocityY: 0,
+            startLat: null,
+            startLon: null,
+        };
+
+        // Reset UI
+        DOM.uiScore.innerText = '0';
+        DOM.uiMultiplier.innerText = 'x1.0';
+        DOM.uiDistance.innerText = '0.0';
+        DOM.uiTime.innerText = '0';
+        DOM.particle.style.transform = `translate(0px, 0px)`;
+
+        // Screen Transitions
+        DOM.startScreen.classList.add('hidden');
+        DOM.gameOverScreen.classList.add('hidden');
+        DOM.gameUI.classList.remove('hidden');
+        
+        // Small timeout to allow display:block to apply before fading in
+        setTimeout(() => {
+            DOM.gameUI.classList.remove('opacity-0');
+        }, 50);
+
+        // Start Loop
+        gameState.animFrame = requestAnimationFrame(gameLoop);
+    }
+
+    function gameOver() {
+        gameState.isPlaying = false;
+        cancelAnimationFrame(gameState.animFrame);
+        window.removeEventListener('deviceorientation', handleOrientation);
+        if (gameState.geoWatchId !== null) {
+            navigator.geolocation.clearWatch(gameState.geoWatchId);
+        }
+
+        // Populate Game Over Screen
+        DOM.finalScore.innerText = gameState.score.toLocaleString();
+        DOM.finalDistance.innerText = `${gameState.distanceWalked.toFixed(1)}m`;
+        DOM.finalTime.innerText = `${gameState.timeElapsed}s`;
+
+        // Screen Transitions
+        DOM.gameUI.classList.add('opacity-0');
+        setTimeout(() => {
+            DOM.gameUI.classList.add('hidden');
+            DOM.gameOverScreen.classList.remove('hidden');
+        }, 500); // Wait for fade out
+    }
+
+    // Event Listeners for Buttons
+    DOM.startBtn.addEventListener('click', requestPermissionsAndStart);
+    DOM.restartBtn.addEventListener('click', requestPermissionsAndStart);
+
+</script>
+</body>
+</html>
