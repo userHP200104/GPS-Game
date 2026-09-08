@@ -3,496 +3,568 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Equilibrium</title>
-    <!-- Dynamic Manifest Link -->
+    <title>Equilibrium 2.0</title>
     <link id="manifest-link" rel="manifest" href="">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 2026 Aesthetic: Fluid, deep, and ambient */
+        /* 2026 Minimalist Aesthetic */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600&display=swap');
+        
+        :root {
+            --bg-color: #050507;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --accent-glow-2: rgba(236, 72, 153, 0.3);
+            --glow-intense: rgba(236, 72, 153, 0.8);
+        }
 
-    :root {
-        --bg-color: #050507;
-        --accent-glow: rgba(99, 102, 241, 0.4);
-        --accent-glow-2: rgba(236, 72, 153, 0.3);
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: #ffffff;
+            overflow: hidden;
+            touch-action: none;
+        }
 
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: var(--bg-color);
-        color: #ffffff;
-        overflow: hidden;
-        touch-action: none; /* Prevent scrolling while playing */
-    }
+        .ambient-bg {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 150vw;
+            height: 150vw;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle at 30% 30%, var(--accent-glow), transparent 40%),
+                        radial-gradient(circle at 70% 70%, var(--accent-glow-2), transparent 40%);
+            filter: blur(80px);
+            opacity: 0.6;
+            z-index: -1;
+            animation: pulse 10s ease-in-out infinite alternate;
+        }
 
-    /* Ambient Aurora Background */
-    .ambient-bg {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        width: 150vw;
-        height: 150vw;
-        transform: translate(-50%, -50%);
-        background: radial-gradient(circle at 30% 30%, var(--accent-glow), transparent 40%),
-                    radial-gradient(circle at 70% 70%, var(--accent-glow-2), transparent 40%);
-        filter: blur(80px);
-        opacity: 0.6;
-        z-index: -1;
-        animation: pulse 10s ease-in-out infinite alternate;
-    }
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+            100% { transform: translate(-50%, -50%) rotate(10deg) scale(1.1); }
+        }
 
-    @keyframes pulse {
-        0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
-        100% { transform: translate(-50%, -50%) rotate(10deg) scale(1.1); }
-    }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+        }
 
-    /* Glassmorphism Bento Boxes */
-    .glass-panel {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 24px;
-    }
+        #game-board {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+        }
 
-    /* Game Elements */
-    #game-board {
-        position: relative;
-        width: 280px;
-        height: 280px;
-        border-radius: 50%;
-        border: 2px dashed rgba(255, 255, 255, 0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-        box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
-    }
+        .safe-zone {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: absolute;
+        }
+        
+        .center-target {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: absolute;
+        }
 
-    #particle {
-        position: absolute;
-        width: 24px;
-        height: 24px;
-        background: #fff;
-        border-radius: 50%;
-        box-shadow: 0 0 20px #fff, 0 0 40px #6366f1;
-        transition: transform 0.05s linear;
-    }
+        #particle {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #fff, 0 0 40px #6366f1;
+            transition: box-shadow 0.3s ease, background 0.3s ease;
+            z-index: 10;
+        }
 
-    .safe-zone {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+        /* Center Glow Effect */
+        #particle.centered {
+            background: #ff7eb3;
+            box-shadow: 0 0 30px #ff7eb3, 0 0 60px #ec4899, 0 0 90px var(--glow-intense);
+        }
 
-    /* Typography */
-    .tracking-widest-xl { letter-spacing: 0.2em; }
-    
-    button {
-        transition: all 0.3s ease;
-    }
-    button:active {
-        transform: scale(0.95);
-    }
-</style>
+        .multiplier-glow {
+            text-shadow: 0 0 15px #ec4899;
+            color: #ff7eb3 !important;
+        }
+
+        /* Explosion Particles */
+        .shrapnel {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ff7eb3;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ec4899;
+            transition: transform 1s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 1s ease-out;
+            opacity: 1;
+        }
+
+        .tracking-widest-xl { letter-spacing: 0.2em; }
+        
+        button { transition: all 0.2s ease; }
+        button:active { transform: scale(0.95); }
+        
+        input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            text-align: center;
+            font-size: 1.5rem;
+            letter-spacing: 0.2em;
+            outline: none;
+            border-radius: 12px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus { border-color: #ff7eb3; }
+        input::placeholder { color: rgba(255,255,255,0.2); }
+
+        #countdown {
+            font-size: 8rem;
+            font-weight: 200;
+            text-shadow: 0 0 40px rgba(255,255,255,0.5);
+        }
+    </style>
 </head>
 <body class="flex flex-col h-screen w-screen relative">
-
-<div class="ambient-bg"></div>
-
-<!-- START SCREEN -->
-<div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-8 text-center">
-    <h1 class="text-4xl font-light tracking-widest-xl mb-4">EQUILIBRIUM</h1>
-    <p class="text-sm text-gray-400 mb-8 max-w-xs font-light">
-        Keep the core balanced using your device tilt. Walk in the real world to increase your score multiplier.
-    </p>
-    <button id="start-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-        INITIALIZE SENSORS
-    </button>
-    <p class="text-xs text-gray-500 mt-6 max-w-xs">Requires GPS & Device Motion permissions to play.</p>
-</div>
-
-<!-- GAME OVER SCREEN -->
-<div id="game-over-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-8 text-center hidden">
-    <h2 class="text-3xl font-light text-red-400 tracking-widest-xl mb-2">CONTAINMENT LOST</h2>
-    <p class="text-gray-400 mb-6">The core touched the perimeter.</p>
     
-    <div class="glass-panel p-6 mb-8 w-full max-w-xs">
-        <p class="text-sm text-gray-400 uppercase tracking-wider mb-1">Final Score</p>
-        <p id="final-score" class="text-4xl font-semibold">0</p>
-        <div class="h-px bg-white/10 my-4"></div>
-        <div class="flex justify-between text-sm">
-            <span class="text-gray-500">Distance:</span>
-            <span id="final-distance" class="text-white">0m</span>
-        </div>
-        <div class="flex justify-between text-sm mt-2">
-            <span class="text-gray-500">Time:</span>
-            <span id="final-time" class="text-white">0s</span>
+    <div class="ambient-bg"></div>
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-8 text-center transition-opacity duration-500">
+        <h1 class="text-4xl font-light tracking-widest-xl mb-2">EQUILIBRIUM</h1>
+        <p class="text-indigo-300 text-xs tracking-widest uppercase mb-6">v2.0 Quantum</p>
+        <p class="text-sm text-gray-400 mb-8 max-w-xs font-light">
+            Keep the core balanced. Hold it in the exact center to double your multiplier. Walk to increase baseline multiplier.
+        </p>
+        <button id="start-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+            INITIALIZE SENSORS
+        </button>
+        
+        <!-- Global Highscore Display -->
+        <div class="mt-12 glass-panel p-4 w-full max-w-xs">
+            <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Global Highscore</p>
+            <div class="flex justify-between items-center px-2">
+                <span id="global-best-name" class="font-semibold text-gray-300 tracking-widest">---</span>
+                <span id="global-best-score" class="font-semibold text-indigo-400">0</span>
+            </div>
         </div>
     </div>
 
-    <button id="restart-btn" class="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/20">
-        RECALIBRATE
-    </button>
-</div>
-
-<!-- MAIN GAME UI -->
-<div id="game-ui" class="flex-1 flex flex-col p-6 hidden opacity-0 transition-opacity duration-1000">
-    
-    <!-- Header / Stats -->
-    <header class="flex justify-between items-center mb-8">
-        <div class="glass-panel px-4 py-2 flex flex-col">
-            <span class="text-[10px] text-gray-500 uppercase tracking-wider">Score</span>
-            <span id="ui-score" class="text-xl font-semibold">0</span>
-        </div>
-        <div class="glass-panel px-4 py-2 flex flex-col items-end">
-            <span class="text-[10px] text-gray-500 uppercase tracking-wider">Multiplier</span>
-            <span id="ui-multiplier" class="text-xl font-semibold text-indigo-400">x1.0</span>
-        </div>
-    </header>
-
-    <!-- Play Area -->
-    <div class="flex-1 flex items-center justify-center relative">
-        <div id="game-board">
-            <div class="safe-zone"></div>
-            <div id="particle"></div>
-        </div>
+    <!-- COUNTDOWN SCREEN -->
+    <div id="countdown-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center m-6 p-8 hidden">
+        <div id="countdown">3</div>
+        <p class="text-gray-400 tracking-widest-xl mt-4 uppercase text-sm">Prepare to Balance</p>
     </div>
 
-    <!-- Telemetry Data (Bento Box style) -->
-    <div class="grid grid-cols-2 gap-4 mt-8">
-        <div class="glass-panel p-4 flex flex-col justify-center">
-            <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                Distance Traveled
-            </span>
-            <div class="flex items-end gap-1">
-                <span id="ui-distance" class="text-2xl font-semibold">0.0</span>
-                <span class="text-gray-400 text-sm mb-0.5">m</span>
+    <!-- GAME OVER SCREEN -->
+    <div id="game-over-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-6 text-center hidden">
+        <h2 class="text-3xl font-light text-red-400 tracking-widest-xl mb-1">CONTAINMENT LOST</h2>
+        
+        <div class="glass-panel p-6 mt-6 mb-6 w-full max-w-xs">
+            <p class="text-sm text-gray-400 uppercase tracking-wider mb-1">Final Score</p>
+            <p id="final-score" class="text-4xl font-semibold mb-4">0</p>
+            
+            <div id="highscore-entry" class="hidden flex flex-col items-center">
+                <p class="text-xs text-[#ff7eb3] uppercase tracking-widest mb-2">New Personal Best!</p>
+                <input type="text" id="player-name" maxlength="3" placeholder="AAA" class="w-24 py-2 uppercase mb-3" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+                <button id="save-score-btn" class="px-6 py-2 bg-indigo-600/50 hover:bg-indigo-500 text-white rounded-full text-sm font-semibold tracking-wide w-full border border-indigo-400/50">
+                    SAVE TO CLOUD
+                </button>
+            </div>
+            <p id="score-saved-msg" class="text-xs text-green-400 hidden mt-4">Score Synced.</p>
+        </div>
+
+        <button id="restart-btn" class="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/20">
+            RECALIBRATE
+        </button>
+    </div>
+
+    <!-- MAIN GAME UI -->
+    <div id="game-ui" class="flex-1 flex flex-col p-6 hidden opacity-0 transition-opacity duration-1000">
+        <!-- Header / Stats -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="glass-panel px-4 py-2 flex flex-col">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Score</span>
+                <span id="ui-score" class="text-xl font-semibold transition-colors duration-300">0</span>
+            </div>
+            <div class="glass-panel px-4 py-2 flex flex-col items-end">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Multiplier</span>
+                <span id="ui-multiplier" class="text-xl font-semibold text-indigo-400 transition-all duration-300">x1.0</span>
+            </div>
+        </header>
+
+        <!-- Play Area -->
+        <div class="flex-1 flex items-center justify-center relative">
+            <div id="game-board">
+                <div class="safe-zone"></div>
+                <div class="center-target"></div>
+                <div id="particle"></div>
             </div>
         </div>
-        
-        <div class="glass-panel p-4 flex flex-col justify-center">
-            <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Stability Time
-            </span>
-            <div class="flex items-end gap-1">
-                <span id="ui-time" class="text-2xl font-semibold">0</span>
-                <span class="text-gray-400 text-sm mb-0.5">s</span>
-            </div>
-        </div>
-        
-        <div class="col-span-2 glass-panel p-4 flex flex-col">
-            <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Accelerometer / Gyro Vector</span>
-            <div class="flex gap-4">
-                <div class="flex-1 bg-white/5 rounded-lg h-1.5 overflow-hidden">
-                    <div id="bar-x" class="h-full bg-indigo-500 w-1/2 transition-all duration-75"></div>
-                </div>
-                <div class="flex-1 bg-white/5 rounded-lg h-1.5 overflow-hidden">
-                    <div id="bar-y" class="h-full bg-pink-500 w-1/2 transition-all duration-75"></div>
+
+        <!-- Telemetry Data -->
+        <div class="grid grid-cols-2 gap-4 mt-8">
+            <div class="glass-panel p-4 flex flex-col justify-center">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                    Distance
+                </span>
+                <div class="flex items-end gap-1">
+                    <span id="ui-distance" class="text-2xl font-semibold">0.0</span>
+                    <span class="text-gray-400 text-sm mb-0.5">m</span>
                 </div>
             </div>
+            
+            <div class="glass-panel p-4 flex flex-col justify-center">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Time
+                </span>
+                <div class="flex items-end gap-1">
+                    <span id="ui-time" class="text-2xl font-semibold">0</span>
+                    <span class="text-gray-400 text-sm mb-0.5">s</span>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    /**
-     * PWA HACK: Inject Manifest and Service Worker dynamically via Blobs 
-     * so the single HTML file functions as a complete installable PWA.
-     */
-    function initPWA() {
-        // 1. Create Manifest Blob
+    <!-- PWA Setup Script -->
+    <script>
         const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#050507"/><circle cx="256" cy="256" r="150" stroke="#6366f1" stroke-width="20" fill="none"/><circle cx="256" cy="256" r="40" fill="#fff"/></svg>`;
-        const iconUrl = 'data:image/svg+xml;base64,' + btoa(iconSvg);
-        
-        const manifest = {
-            name: "Equilibrium",
-            short_name: "Equil",
-            description: "A minimal sensor-based PWA game.",
-            start_url: "./",
-            display: "standalone",
-            background_color: "#050507",
-            theme_color: "#050507",
-            icons: [
-                { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
-            ]
-        };
-        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestBlob = new Blob([JSON.stringify({
+            name: "Equilibrium 2", short_name: "Equil2", start_url: "./", display: "standalone",
+            background_color: "#050507", theme_color: "#050507",
+            icons: [{ src: 'data:image/svg+xml;base64,' + btoa(iconSvg), sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }]
+        })], { type: 'application/json' });
         document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
 
-        // 2. Create Service Worker Blob (Handles offline caching of this single file)
-        const swCode = `
-            const CACHE_NAME = 'equilibrium-v1';
-            self.addEventListener('install', event => {
-                self.skipWaiting();
-                event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./'])));
-            });
-            self.addEventListener('activate', event => {
-                event.waitUntil(clients.claim());
-            });
-            self.addEventListener('fetch', event => {
-                event.respondWith(
-                    caches.match(event.request).then(response => response || fetch(event.request))
-                );
-            });
-        `;
-        const swBlob = new Blob([swCode], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(swBlob);
+        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v2').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' })));
+    </script>
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register(swUrl)
-                .then(() => console.log("Virtual Service Worker Registered (Offline Ready)"))
-                .catch(err => console.error("SW Registration failed:", err));
-        }
-    }
-    initPWA();
+    <!-- Main Game & Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    /**
-     * GAME ENGINE & LOGIC
-     */
-    const DOM = {
-        startScreen: document.getElementById('start-screen'),
-        gameOverScreen: document.getElementById('game-over-screen'),
-        gameUI: document.getElementById('game-ui'),
-        startBtn: document.getElementById('start-btn'),
-        restartBtn: document.getElementById('restart-btn'),
-        particle: document.getElementById('particle'),
-        board: document.getElementById('game-board'),
-        uiScore: document.getElementById('ui-score'),
-        uiMultiplier: document.getElementById('ui-multiplier'),
-        uiDistance: document.getElementById('ui-distance'),
-        uiTime: document.getElementById('ui-time'),
-        barX: document.getElementById('bar-x'),
-        barY: document.getElementById('bar-y'),
-        finalScore: document.getElementById('final-score'),
-        finalDistance: document.getElementById('final-distance'),
-        finalTime: document.getElementById('final-time'),
-    };
+        // Firebase Initialization
+        let firebaseConfig = {};
+        try { firebaseConfig = JSON.parse(__firebase_config); } catch (e) { console.warn("Using default local env"); }
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'equilibrium-game-id';
+        let currentUser = null;
 
-    let gameState = {
-        isPlaying: false,
-        score: 0,
-        multiplier: 1.0,
-        distanceWalked: 0, // in meters
-        timeElapsed: 0, // in seconds
-        startTime: 0,
-        
-        // Sensors
-        particleX: 0,
-        particleY: 0,
-        velocityX: 0,
-        velocityY: 0,
-        
-        // GPS tracking
-        startLat: null,
-        startLon: null,
-        geoWatchId: null,
-
-        // Animation Frame
-        animFrame: null
-    };
-
-    const boardRadius = 140; // half of 280px
-    const particleRadius = 12; // half of 24px
-    const maxRadius = boardRadius - particleRadius;
-
-    // Haversine formula to calculate distance between two lat/lon points in meters
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Earth radius in meters
-        const φ1 = lat1 * Math.PI / 180;
-        const φ2 = lat2 * Math.PI / 180;
-        const Δφ = (lat2 - lat1) * Math.PI / 180;
-        const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
-
-    function handleOrientation(event) {
-        if (!gameState.isPlaying) return;
-
-        // Beta is front-to-back tilt [-180,180]
-        // Gamma is left-to-right tilt [-90,90]
-        let x = event.gamma || 0; 
-        let y = event.beta || 0;
-
-        // Clamp values for smoother gameplay
-        if (x > 90) x = 90;
-        if (x < -90) x = -90;
-        if (y > 90) y = 90;
-        if (y < -90) y = -90;
-
-        // Convert tilt to velocity (sensitivity multiplier)
-        gameState.velocityX += x * 0.05;
-        gameState.velocityY += y * 0.05;
-
-        // Add friction so it doesn't slide forever
-        gameState.velocityX *= 0.95;
-        gameState.velocityY *= 0.95;
-
-        // Update UI vectors
-        DOM.barX.style.width = `${Math.min(100, Math.max(0, (x + 90) / 180 * 100))}%`;
-        DOM.barY.style.width = `${Math.min(100, Math.max(0, (y + 90) / 180 * 100))}%`;
-    }
-
-    function handlePosition(position) {
-        if (!gameState.isPlaying) return;
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        if (gameState.startLat === null) {
-            gameState.startLat = lat;
-            gameState.startLon = lon;
-        } else {
-            const dist = calculateDistance(gameState.startLat, gameState.startLon, lat, lon);
-            // Update distance if it increased (avoiding GPS jitter slightly)
-            if (dist > gameState.distanceWalked) {
-                gameState.distanceWalked = dist;
-                // Multiplier increases by 0.1 for every meter walked
-                gameState.multiplier = 1.0 + (gameState.distanceWalked * 0.1);
-                DOM.uiDistance.innerText = gameState.distanceWalked.toFixed(1);
-                DOM.uiMultiplier.innerText = `x${gameState.multiplier.toFixed(1)}`;
-            }
-        }
-    }
-
-    function gameLoop() {
-        if (!gameState.isPlaying) return;
-
-        // Update Particle Position
-        gameState.particleX += gameState.velocityX;
-        gameState.particleY += gameState.velocityY;
-
-        // Calculate distance from center
-        const distFromCenter = Math.sqrt(gameState.particleX ** 2 + gameState.particleY ** 2);
-
-        // Check Collision (Game Over)
-        if (distFromCenter > maxRadius) {
-            gameOver();
-            return;
-        }
-
-        // Apply position to DOM
-        DOM.particle.style.transform = `translate(${gameState.particleX}px, ${gameState.particleY}px)`;
-
-        // Time & Score calculation
-        const now = Date.now();
-        gameState.timeElapsed = Math.floor((now - gameState.startTime) / 1000);
-        
-        // Score = Time * Multiplier (Walking increases multiplier)
-        gameState.score = Math.floor(gameState.timeElapsed * 10 * gameState.multiplier);
-
-        // Update text UI periodically
-        DOM.uiScore.innerText = gameState.score.toLocaleString();
-        DOM.uiTime.innerText = gameState.timeElapsed;
-
-        gameState.animFrame = requestAnimationFrame(gameLoop);
-    }
-
-    async function requestPermissionsAndStart() {
-        try {
-            // Request Device Orientation (Required for iOS 13+)
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                const permission = await DeviceOrientationEvent.requestPermission();
-                if (permission !== 'granted') {
-                    alert('Device orientation permission is required to balance the core.');
-                    return;
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
                 }
+            } catch(e) { console.error("Auth init failed", e); }
+        };
+        initAuth();
+
+        let globalBestScore = 0;
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                // Listen to Highscores Collection
+                const hsRef = collection(db, 'artifacts', appId, 'public', 'data', 'highscores');
+                onSnapshot(hsRef, (snapshot) => {
+                    let best = { name: '---', score: 0 };
+                    // Parse all documents in memory to find max (No complex queries rule)
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.score > best.score) best = data;
+                    });
+                    
+                    globalBestScore = best.score;
+                    document.getElementById('global-best-name').innerText = best.name;
+                    document.getElementById('global-best-score').innerText = best.score.toLocaleString();
+                }, (error) => console.error("Snapshot error:", error));
             }
+        });
 
-            // Setup Listeners
-            window.addEventListener('deviceorientation', handleOrientation);
-            
-            // Request GPS (Requires HTTPS or localhost, works seamlessly in most PWAs)
-            if ("geolocation" in navigator) {
-                gameState.geoWatchId = navigator.geolocation.watchPosition(
-                    handlePosition,
-                    (err) => console.warn("GPS Error:", err.message),
-                    { enableHighAccuracy: true, maximumAge: 0 }
-                );
-            } else {
-                console.warn("Geolocation not supported. Multiplier will remain 1x.");
-            }
-
-            startGame();
-
-        } catch (error) {
-            console.error(error);
-            alert('Sensors unavailable. Ensure you are on a mobile device or have hardware sensors enabled.');
-        }
-    }
-
-    function startGame() {
-        // Reset State
-        gameState = {
-            ...gameState,
-            isPlaying: true,
-            score: 0,
-            multiplier: 1.0,
-            distanceWalked: 0,
-            timeElapsed: 0,
-            startTime: Date.now(),
-            particleX: 0,
-            particleY: 0,
-            velocityX: 0,
-            velocityY: 0,
-            startLat: null,
-            startLon: null,
+        // DOM Elements
+        const DOM = {
+            startScreen: document.getElementById('start-screen'),
+            countdownScreen: document.getElementById('countdown-screen'),
+            countdownText: document.getElementById('countdown'),
+            gameOverScreen: document.getElementById('game-over-screen'),
+            gameUI: document.getElementById('game-ui'),
+            startBtn: document.getElementById('start-btn'),
+            restartBtn: document.getElementById('restart-btn'),
+            saveBtn: document.getElementById('save-score-btn'),
+            particle: document.getElementById('particle'),
+            board: document.getElementById('game-board'),
+            uiScore: document.getElementById('ui-score'),
+            uiMultiplier: document.getElementById('ui-multiplier'),
+            uiDistance: document.getElementById('ui-distance'),
+            uiTime: document.getElementById('ui-time'),
+            finalScore: document.getElementById('final-score'),
+            hsEntry: document.getElementById('highscore-entry'),
+            playerName: document.getElementById('player-name'),
+            savedMsg: document.getElementById('score-saved-msg')
         };
 
-        // Reset UI
-        DOM.uiScore.innerText = '0';
-        DOM.uiMultiplier.innerText = 'x1.0';
-        DOM.uiDistance.innerText = '0.0';
-        DOM.uiTime.innerText = '0';
-        DOM.particle.style.transform = `translate(0px, 0px)`;
+        let state = {
+            isPlaying: false, score: 0, baseMultiplier: 1.0, currentMultiplier: 1.0,
+            distanceWalked: 0, timeElapsed: 0, startTime: 0,
+            x: 0, y: 0, vx: 0, vy: 0,
+            startLat: null, startLon: null, geoWatchId: null, animFrame: null,
+            shrapnelElements: []
+        };
 
-        // Screen Transitions
-        DOM.startScreen.classList.add('hidden');
-        DOM.gameOverScreen.classList.add('hidden');
-        DOM.gameUI.classList.remove('hidden');
-        
-        // Small timeout to allow display:block to apply before fading in
-        setTimeout(() => {
-            DOM.gameUI.classList.remove('opacity-0');
-        }, 50);
+        const config = { boardRadius: 140, particleRadius: 12, maxRadius: 128, centerRadius: 15 };
 
-        // Start Loop
-        gameState.animFrame = requestAnimationFrame(gameLoop);
-    }
+        // Math & Logic Helpers
+        const calculateDistance = (lat1, lon1, lat2, lon2) => {
+            const R = 6371e3, p1 = lat1 * Math.PI/180, p2 = lat2 * Math.PI/180;
+            const dp = (lat2-lat1) * Math.PI/180, dl = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(dp/2)**2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2)**2;
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+        };
 
-    function gameOver() {
-        gameState.isPlaying = false;
-        cancelAnimationFrame(gameState.animFrame);
-        window.removeEventListener('deviceorientation', handleOrientation);
-        if (gameState.geoWatchId !== null) {
-            navigator.geolocation.clearWatch(gameState.geoWatchId);
-        }
+        const handleOrientation = (e) => {
+            if (!state.isPlaying) return;
+            let x = Math.max(-90, Math.min(90, e.gamma || 0));
+            let y = Math.max(-90, Math.min(90, e.beta || 0));
+            
+            // Apply velocity
+            state.vx += x * 0.05;
+            state.vy += y * 0.05;
+            
+            // Friction
+            state.vx *= 0.94;
+            state.vy *= 0.94;
+        };
 
-        // Populate Game Over Screen
-        DOM.finalScore.innerText = gameState.score.toLocaleString();
-        DOM.finalDistance.innerText = `${gameState.distanceWalked.toFixed(1)}m`;
-        DOM.finalTime.innerText = `${gameState.timeElapsed}s`;
+        const handlePosition = (pos) => {
+            if (!state.isPlaying) return;
+            const lat = pos.coords.latitude, lon = pos.coords.longitude;
+            if (state.startLat === null) { state.startLat = lat; state.startLon = lon; } 
+            else {
+                const dist = calculateDistance(state.startLat, state.startLon, lat, lon);
+                if (dist > state.distanceWalked) {
+                    state.distanceWalked = dist;
+                    state.baseMultiplier = 1.0 + (state.distanceWalked * 0.1);
+                    DOM.uiDistance.innerText = state.distanceWalked.toFixed(1);
+                }
+            }
+        };
 
-        // Screen Transitions
-        DOM.gameUI.classList.add('opacity-0');
-        setTimeout(() => {
-            DOM.gameUI.classList.add('hidden');
-            DOM.gameOverScreen.classList.remove('hidden');
-        }, 500); // Wait for fade out
-    }
+        // Effects
+        const triggerExplosion = () => {
+            DOM.particle.style.display = 'none';
+            for (let i = 0; i < 15; i++) {
+                const shrapnel = document.createElement('div');
+                shrapnel.className = 'shrapnel';
+                shrapnel.style.transform = `translate(${state.x}px, ${state.y}px)`;
+                DOM.board.appendChild(shrapnel);
+                state.shrapnelElements.push(shrapnel);
 
-    // Event Listeners for Buttons
-    DOM.startBtn.addEventListener('click', requestPermissionsAndStart);
-    DOM.restartBtn.addEventListener('click', requestPermissionsAndStart);
+                // Animate outwards
+                requestAnimationFrame(() => {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 40 + Math.random() * 80;
+                    const endX = state.x + Math.cos(angle) * distance;
+                    const endY = state.y + Math.sin(angle) * distance;
+                    shrapnel.style.transform = `translate(${endX}px, ${endY}px)`;
+                    shrapnel.style.opacity = '0';
+                });
+            }
+        };
 
-</script>
+        const clearExplosion = () => {
+            state.shrapnelElements.forEach(el => el.remove());
+            state.shrapnelElements = [];
+            DOM.particle.style.display = 'block';
+        };
+
+        const gameLoop = () => {
+            if (!state.isPlaying) return;
+
+            state.x += state.vx;
+            state.y += state.vy;
+            const distFromCenter = Math.sqrt(state.x**2 + state.y**2);
+
+            // Check Game Over
+            if (distFromCenter > config.maxRadius) {
+                gameOver();
+                return;
+            }
+
+            // Apply position
+            DOM.particle.style.transform = `translate(${state.x}px, ${state.y}px)`;
+
+            // Check Center Glow
+            const isCentered = distFromCenter < config.centerRadius;
+            state.currentMultiplier = state.baseMultiplier * (isCentered ? 2 : 1);
+            
+            if (isCentered) {
+                DOM.particle.classList.add('centered');
+                DOM.uiMultiplier.classList.add('multiplier-glow');
+            } else {
+                DOM.particle.classList.remove('centered');
+                DOM.uiMultiplier.classList.remove('multiplier-glow');
+            }
+
+            // Time & Score
+            state.timeElapsed = Math.floor((Date.now() - state.startTime) / 1000);
+            state.score += (state.currentMultiplier * 0.16); // Accumulate over frames (~60fps)
+
+            // Update UI efficiently
+            if (Math.floor(state.score) !== parseInt(DOM.uiScore.innerText.replace(/,/g, ''))) {
+                DOM.uiScore.innerText = Math.floor(state.score).toLocaleString();
+            }
+            DOM.uiTime.innerText = state.timeElapsed;
+            DOM.uiMultiplier.innerText = `x${state.currentMultiplier.toFixed(1)}`;
+
+            state.animFrame = requestAnimationFrame(gameLoop);
+        };
+
+        const startCountdown = async () => {
+            DOM.startScreen.classList.add('opacity-0');
+            DOM.gameOverScreen.classList.add('hidden');
+            setTimeout(() => {
+                DOM.startScreen.classList.add('hidden');
+                DOM.countdownScreen.classList.remove('hidden');
+                DOM.gameUI.classList.remove('hidden');
+                DOM.gameUI.classList.remove('opacity-0');
+            }, 500);
+
+            for (let i = 3; i > 0; i--) {
+                DOM.countdownText.innerText = i;
+                // Pop animation
+                DOM.countdownText.style.transform = 'scale(1.2)';
+                setTimeout(() => DOM.countdownText.style.transform = 'scale(1)', 200);
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            
+            DOM.countdownScreen.classList.add('hidden');
+            startGame();
+        };
+
+        const startGame = () => {
+            clearExplosion();
+            state = { ...state, isPlaying: true, score: 0, baseMultiplier: 1.0, currentMultiplier: 1.0, distanceWalked: 0, timeElapsed: 0, startTime: Date.now(), x: 0, y: 0, vx: 0, vy: 0, startLat: null, startLon: null };
+            
+            DOM.uiScore.innerText = '0';
+            DOM.uiMultiplier.innerText = 'x1.0';
+            DOM.uiDistance.innerText = '0.0';
+            DOM.uiTime.innerText = '0';
+            DOM.particle.classList.remove('centered');
+            DOM.uiMultiplier.classList.remove('multiplier-glow');
+
+            state.animFrame = requestAnimationFrame(gameLoop);
+        };
+
+        const gameOver = () => {
+            state.isPlaying = false;
+            cancelAnimationFrame(state.animFrame);
+            triggerExplosion();
+
+            const finalIntScore = Math.floor(state.score);
+            DOM.finalScore.innerText = finalIntScore.toLocaleString();
+
+            // Handle Highscore UI
+            DOM.hsEntry.classList.add('hidden');
+            DOM.savedMsg.classList.add('hidden');
+            DOM.playerName.value = '';
+            DOM.saveBtn.disabled = false;
+            DOM.saveBtn.innerText = 'SAVE TO CLOUD';
+
+            // Show input if it's better than current global best, OR if they just got a decent score and haven't saved before.
+            // For fun, we'll allow anyone > 100 points to save their score.
+            if (finalIntScore > 100) {
+                DOM.hsEntry.classList.remove('hidden');
+            }
+
+            setTimeout(() => {
+                DOM.gameUI.classList.add('opacity-0');
+                setTimeout(() => {
+                    DOM.gameUI.classList.add('hidden');
+                    DOM.gameOverScreen.classList.remove('hidden');
+                }, 1000);
+            }, 1000); // Delay to watch explosion
+        };
+
+        // Firebase Save Function
+        DOM.saveBtn.addEventListener('click', async () => {
+            const name = DOM.playerName.value.trim().toUpperCase();
+            if (name.length !== 3 || !currentUser) return;
+            
+            DOM.saveBtn.disabled = true;
+            DOM.saveBtn.innerText = 'SAVING...';
+
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'highscores'), {
+                    userId: currentUser.uid,
+                    name: name,
+                    score: Math.floor(state.score),
+                    timestamp: Date.now()
+                });
+                
+                DOM.hsEntry.classList.add('hidden');
+                DOM.savedMsg.classList.remove('hidden');
+            } catch (e) {
+                console.error("Error saving score", e);
+                DOM.saveBtn.innerText = 'ERROR - TRY AGAIN';
+                DOM.saveBtn.disabled = false;
+            }
+        });
+
+        // Permissions & Hardware Listeners
+        const requestPermissions = async () => {
+            try {
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const perm = await DeviceOrientationEvent.requestPermission();
+                    if (perm !== 'granted') return alert('Tilt permission required.');
+                }
+                
+                window.addEventListener('deviceorientation', handleOrientation);
+                
+                if ("geolocation" in navigator) {
+                    if (state.geoWatchId) navigator.geolocation.clearWatch(state.geoWatchId);
+                    state.geoWatchId = navigator.geolocation.watchPosition(
+                        handlePosition, (err) => console.warn("GPS:", err.message),
+                        { enableHighAccuracy: true, maximumAge: 0 }
+                    );
+                }
+                startCountdown();
+            } catch (err) {
+                console.error(err);
+                alert('Sensor initialization failed. Please use a compatible mobile device.');
+            }
+        };
+
+        DOM.startBtn.addEventListener('click', requestPermissions);
+        DOM.restartBtn.addEventListener('click', startCountdown);
+
+    </script>
 </body>
 </html>
+
