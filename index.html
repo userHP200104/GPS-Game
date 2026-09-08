@@ -4,21 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Equilibrium</title>
-    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22%23ff7eb3%22/><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22none%22 stroke=%22%23ec4899%22 stroke-width=%224%22 opacity=%220.5%22/></svg>">
     <link id="manifest-link" rel="manifest" href="">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 2026 Minimalist Aesthetic */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600;800&display=swap');
         
         :root {
-            --bg-color: #050507;
-            --accent-glow: rgba(99, 102, 241, 0.4);
-            --accent-glow-2: rgba(236, 72, 153, 0.3);
-            --glow-intense: rgba(236, 72, 153, 0.8);
-            --death-glow: rgba(220, 38, 38, 0.6);
-            --arcade-glow: rgba(56, 189, 248, 0.5);
+            --bg-color: #030305;
+            --accent-glow: rgba(99, 102, 241, 0.2);
+            --accent-glow-2: rgba(236, 72, 153, 0.15);
         }
 
         body {
@@ -29,6 +24,7 @@
             touch-action: none;
         }
 
+        /* Deep Ambient Background */
         .ambient-bg {
             position: fixed;
             top: 50%;
@@ -39,21 +35,19 @@
             background: radial-gradient(circle at 30% 30%, var(--accent-glow), transparent 40%),
                         radial-gradient(circle at 70% 70%, var(--accent-glow-2), transparent 40%);
             filter: blur(80px);
-            opacity: 0.6;
-            z-index: -1;
-            animation: pulse 10s ease-in-out infinite alternate;
+            z-index: -2;
+            animation: pulse 15s ease-in-out infinite alternate;
             transition: background 1s ease;
         }
 
         body.death-mode .ambient-bg {
-            background: radial-gradient(circle at 30% 30%, var(--death-glow), transparent 50%),
+            background: radial-gradient(circle at 30% 30%, rgba(220, 38, 38, 0.3), transparent 50%),
                         radial-gradient(circle at 70% 70%, rgba(0,0,0,1), transparent 50%);
-            opacity: 0.8;
         }
         
         body.arcade-mode .ambient-bg {
-            background: radial-gradient(circle at 20% 80%, var(--arcade-glow), transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.4), transparent 50%);
+            background: radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.25), transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.2), transparent 50%);
         }
 
         @keyframes pulse {
@@ -61,139 +55,32 @@
             100% { transform: translate(-50%, -50%) rotate(10deg) scale(1.1); }
         }
 
+        /* Canvas Layer */
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Glassmorphism UI */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 24px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
-        #game-board {
-            position: relative;
-            /* Dynamic sizing based on mode */
-            width: 280px; 
-            height: 280px;
-            border-radius: 50%;
-            border: 2px dashed rgba(255, 255, 255, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
-            /* Linear transition for smooth dynamic shrinking */
-            transition: width 0.1s linear, height 0.1s linear, border-color 0.4s ease, box-shadow 0.4s ease;
-        }
-
-        body.death-mode #game-board {
-            border-color: rgba(239, 68, 68, 0.4);
-            box-shadow: inset 0 0 50px rgba(239, 68, 68, 0.2);
-        }
-        
-        #game-board.ion-destabilized {
-            border-color: rgba(249, 115, 22, 0.8) !important;
-            box-shadow: inset 0 0 80px rgba(249, 115, 22, 0.5) !important;
-            border-style: solid;
-        }
-        
-        #game-board.higgs-barrier {
-            border-color: rgba(234, 179, 8, 0.8) !important;
-            box-shadow: inset 0 0 40px rgba(234, 179, 8, 0.4), 0 0 20px rgba(234, 179, 8, 0.2) !important;
-            border-style: solid;
-            border-width: 4px;
-        }
-
-        #game-board.danger-pulse {
-            border-color: rgba(249, 115, 22, 0.8) !important;
-            box-shadow: inset 0 0 60px rgba(249, 115, 22, 0.4) !important;
-        }
-
-        .center-target {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            position: absolute;
-            z-index: 1;
-        }
-
-        #particle {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 0 20px #fff, 0 0 40px #6366f1;
-            transition: box-shadow 0.3s ease, background 0.3s ease;
-            z-index: 20;
-        }
-
-        #particle.centered {
-            background: #ff7eb3;
-            box-shadow: 0 0 30px #ff7eb3, 0 0 60px #ec4899, 0 0 90px var(--glow-intense);
-        }
-
-        body.death-mode #particle.centered {
-            background: #ef4444;
-            box-shadow: 0 0 30px #ef4444, 0 0 60px #dc2626, 0 0 90px #991b1b;
-        }
-        
-        /* Higgs Invincibility */
-        #particle.invincible {
-            background: #fef08a !important;
-            box-shadow: 0 0 40px #fef08a, 0 0 80px #eab308, 0 0 120px #ca8a04 !important;
-        }
-
-        /* Powerups */
-        .powerup {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 800;
-            color: white;
-            z-index: 10;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
-
-        .pu-x2 { background: #3b82f6; box-shadow: 0 0 20px #2563eb; }
-        .pu-ion { background: #f97316; box-shadow: 0 0 20px #ea580c; text-shadow: 0 0 5px white; }
-        .pu-quark { background: #000; border: 2px solid #ef4444; color: #ef4444; box-shadow: 0 0 20px #dc2626; }
-        .pu-higgs { background: #eab308; box-shadow: 0 0 20px #ca8a04; color: black; }
-        .pu-plus5 { background: #22c55e; box-shadow: 0 0 20px #16a34a; }
-
-        .multiplier-glow {
-            text-shadow: 0 0 15px #ec4899;
-            color: #ff7eb3 !important;
-        }
-        body.death-mode .multiplier-glow {
-            text-shadow: 0 0 15px #dc2626;
-            color: #ef4444 !important;
-        }
-        .x2-glow {
-            text-shadow: 0 0 20px #3b82f6 !important;
-            color: #60a5fa !important;
-        }
-
-        .shrapnel {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            background: #ff7eb3;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #ec4899;
-            transition: transform 1s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 1s ease-out;
-            opacity: 1;
-        }
+        .multiplier-glow { text-shadow: 0 0 15px #ec4899; color: #ff7eb3 !important; }
+        body.death-mode .multiplier-glow { text-shadow: 0 0 15px #dc2626; color: #ef4444 !important; }
+        .x2-glow { text-shadow: 0 0 20px #3b82f6 !important; color: #60a5fa !important; }
 
         .tracking-widest-xl { letter-spacing: 0.2em; }
-        
-        button { transition: all 0.2s ease; }
+        button { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         button:active { transform: scale(0.95); }
         
         input {
@@ -208,65 +95,62 @@
             transition: border-color 0.3s ease;
         }
         input:focus { border-color: #ff7eb3; }
-        
-        /* Modal Scrollbar hidden */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Floating Score Text Animation */
+        /* Floating HTML Score Text (Overlayed on canvas) */
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-30px) scale(1.2); opacity: 0; }
+            100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
         }
         .score-float {
             position: absolute;
             color: #22c55e;
             font-weight: 800;
-            font-size: 18px;
-            text-shadow: 0 0 10px #16a34a;
+            font-size: 20px;
+            text-shadow: 0 0 15px #16a34a, 0 0 30px #22c55e;
             pointer-events: none;
-            animation: floatUp 1s ease-out forwards;
+            animation: floatUp 1.2s ease-out forwards;
             z-index: 50;
         }
-        .score-float-large {
-            color: #f97316;
-            font-size: 24px;
-            text-shadow: 0 0 15px #ea580c;
-        }
+        .score-float-large { color: #f97316; font-size: 28px; text-shadow: 0 0 20px #ea580c; }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen relative">
     
     <div class="ambient-bg"></div>
+    
+    <!-- HIGH-PERFORMANCE CANVAS ENGINE -->
+    <canvas id="game-canvas"></canvas>
 
     <!-- START SCREEN -->
     <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-4 sm:m-6 p-6 text-center transition-opacity duration-500 overflow-y-auto no-scrollbar">
-        <h1 class="text-4xl font-light tracking-widest-xl mb-2 mt-8">EQUILIBRIUM</h1>
-        <p class="text-indigo-300 text-[10px] tracking-widest uppercase mb-8">v7.1 Trinity</p>
+        <h1 class="text-4xl sm:text-5xl font-light tracking-widest-xl mb-2 mt-8 text-white">EQUILIBRIUM</h1>
+        <p class="text-indigo-400 text-[10px] tracking-widest uppercase mb-10 opacity-70">Quantum Render Engine</p>
         
-        <div class="flex flex-col gap-3 w-full max-w-xs mb-8">
-            <button id="start-classic-btn" class="px-6 py-3 bg-white text-black rounded-full text-sm font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+        <div class="flex flex-col gap-3 w-full max-w-xs mb-10">
+            <button id="start-classic-btn" class="px-6 py-3.5 bg-white text-black rounded-full text-sm font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
                 CLASSIC MODE
             </button>
-            <button id="start-arcade-btn" class="px-6 py-3 bg-blue-900/40 border border-blue-500/50 text-blue-400 rounded-full text-sm font-semibold tracking-wide hover:bg-blue-800/60 hover:text-white shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+            <button id="start-arcade-btn" class="px-6 py-3.5 bg-blue-900/40 border border-blue-500/50 text-blue-400 rounded-full text-sm font-semibold tracking-wide hover:bg-blue-800/60 hover:text-white shadow-[0_0_15px_rgba(59,130,246,0.2)] relative overflow-hidden group">
+                <div class="absolute inset-0 bg-blue-400/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
                 ARCADE MODE
             </button>
-            <button id="start-death-btn" class="px-6 py-3 bg-red-950/40 border border-red-500/50 text-red-400 rounded-full text-sm font-semibold tracking-wide hover:bg-red-900/60 hover:text-white shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <button id="start-death-btn" class="px-6 py-3.5 bg-red-950/40 border border-red-500/50 text-red-400 rounded-full text-sm font-semibold tracking-wide hover:bg-red-900/60 hover:text-white shadow-[0_0_15px_rgba(220,38,38,0.2)]">
                 DEATH MODE
             </button>
         </div>
         
-        <!-- Local Highscore Display -->
-        <div class="glass-panel p-4 w-full max-w-xs text-left mb-8">
-            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-3 text-center border-b border-white/10 pb-2">Local Best Scores</p>
-            <div class="flex justify-between items-center mb-1">
+        <div class="glass-panel p-5 w-full max-w-xs text-left mb-8">
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-4 text-center border-b border-white/10 pb-2">Encrypted Records</p>
+            <div class="flex justify-between items-center mb-2">
                 <span class="text-xs text-gray-400 uppercase tracking-wider">Classic</span>
                 <div class="text-right">
                     <span id="best-classic-name" class="font-semibold text-gray-300 text-sm tracking-widest mr-2">---</span>
                     <span id="best-classic-score" class="font-semibold text-indigo-400 text-sm">0</span>
                 </div>
             </div>
-            <div class="flex justify-between items-center mb-1">
+            <div class="flex justify-between items-center mb-2">
                 <span class="text-xs text-blue-400/70 uppercase tracking-wider">Arcade</span>
                 <div class="text-right">
                     <span id="best-arcade-name" class="font-semibold text-gray-300 text-sm tracking-widest mr-2">---</span>
@@ -285,134 +169,125 @@
 
     <!-- ARCADE INFO MODAL -->
     <div id="arcade-info-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md hidden transition-opacity duration-300 p-6 overflow-y-auto no-scrollbar">
-        <h2 class="text-2xl font-light text-blue-400 tracking-widest-xl mb-4 mt-10 text-center">ARCADE PROTOCOL</h2>
-        <p class="text-xs text-gray-400 mb-6 max-w-xs text-center leading-relaxed">
+        <h2 class="text-2xl font-light text-blue-400 tracking-widest-xl mb-4 mt-10 text-center text-shadow-glow">ARCADE PROTOCOL</h2>
+        <p class="text-xs text-gray-400 mb-8 max-w-xs text-center leading-relaxed">
             Safe area expanded. Anomalies have a 20% chance to spawn every 10 seconds.
         </p>
 
-        <div class="flex flex-col gap-3 w-full max-w-sm mb-8">
-            <div class="flex items-center gap-3 glass-panel p-2.5">
-                <div class="w-7 h-7 rounded-full bg-blue-500 shadow-[0_0_15px_#2563eb] flex items-center justify-center text-xs font-bold text-white shrink-0">x2</div>
-                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-blue-400 font-bold">2x MULTIPLIER:</span> Doubles multiplier for 5s.</div>
+        <div class="flex flex-col gap-3 w-full max-w-sm mb-10">
+            <div class="flex items-center gap-4 glass-panel p-3">
+                <div class="w-8 h-8 rounded-full bg-blue-500 shadow-[0_0_15px_#2563eb] flex items-center justify-center text-xs font-bold text-white shrink-0">x2</div>
+                <div class="text-xs text-gray-300 leading-tight"><span class="text-blue-400 font-bold">2x MULTIPLIER:</span> Doubles multiplier for 5s.</div>
             </div>
-            <div class="flex items-center gap-3 glass-panel p-2.5 border-orange-500/30 bg-orange-950/20">
-                <div class="w-7 h-7 rounded-full bg-orange-500 shadow-[0_0_15px_#ea580c] flex items-center justify-center text-xs font-bold text-white shrink-0">⚡</div>
-                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-orange-400 font-bold">ION:</span> Slowly shrinks area for 10s. Survive for +100pts.</div>
+            <div class="flex items-center gap-4 glass-panel p-3 border-orange-500/30 bg-orange-950/20">
+                <div class="w-8 h-8 rounded-full bg-orange-500 shadow-[0_0_15px_#ea580c] flex items-center justify-center text-xs font-bold text-white shrink-0">⚡</div>
+                <div class="text-xs text-gray-300 leading-tight"><span class="text-orange-400 font-bold">ION:</span> Slowly shrinks area for 10s. Survive for +100pts.</div>
             </div>
-            <div class="flex items-center gap-3 glass-panel p-2.5 border-red-500/30 bg-red-950/20">
-                <div class="w-7 h-7 rounded-full bg-black border-2 border-red-500 shadow-[0_0_15px_#dc2626] flex items-center justify-center text-xs font-bold text-red-500 shrink-0">Q</div>
-                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-red-500 font-bold">QUARK:</span> Instant containment failure. Avoid!</div>
+            <div class="flex items-center gap-4 glass-panel p-3 border-red-500/30 bg-red-950/20">
+                <div class="w-8 h-8 rounded-full bg-black border-2 border-red-500 shadow-[0_0_15px_#dc2626] flex items-center justify-center text-xs font-bold text-red-500 shrink-0">Q</div>
+                <div class="text-xs text-gray-300 leading-tight"><span class="text-red-500 font-bold">QUARK:</span> Instant containment failure. Avoid!</div>
             </div>
-            <div class="flex items-center gap-3 glass-panel p-2.5">
-                <div class="w-7 h-7 rounded-full bg-yellow-500 shadow-[0_0_15px_#ca8a04] flex items-center justify-center text-xs font-bold text-black shrink-0">H</div>
-                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-yellow-500 font-bold">HIGGS BOSON:</span> Creates a solid barrier at the perimeter for 10s.</div>
+            <div class="flex items-center gap-4 glass-panel p-3">
+                <div class="w-8 h-8 rounded-full bg-yellow-500 shadow-[0_0_15px_#ca8a04] flex items-center justify-center text-xs font-bold text-black shrink-0">H</div>
+                <div class="text-xs text-gray-300 leading-tight"><span class="text-yellow-500 font-bold">HIGGS BOSON:</span> Creates a solid barrier at the perimeter for 10s.</div>
             </div>
-            <div class="flex items-center gap-3 glass-panel p-2.5">
-                <div class="w-7 h-7 rounded-full bg-green-500 shadow-[0_0_15px_#16a34a] flex items-center justify-center text-xs font-bold text-white shrink-0">+5</div>
-                <div class="text-[11px] text-gray-300 leading-tight"><span class="text-green-500 font-bold">PLUS 5:</span> Instantly grants 5 points.</div>
+            <div class="flex items-center gap-4 glass-panel p-3">
+                <div class="w-8 h-8 rounded-full bg-green-500 shadow-[0_0_15px_#16a34a] flex items-center justify-center text-xs font-bold text-white shrink-0">+5</div>
+                <div class="text-xs text-gray-300 leading-tight"><span class="text-green-500 font-bold">PLUS 5:</span> Instantly grants 5 points.</div>
             </div>
         </div>
 
-        <button id="proceed-arcade-btn" class="px-8 py-4 bg-blue-600 text-white rounded-full font-semibold tracking-wide hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.4)] mb-8">
+        <button id="proceed-arcade-btn" class="px-10 py-4 bg-blue-600 text-white rounded-full font-semibold tracking-wide hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.4)] mb-8">
             PROCEED
         </button>
     </div>
 
     <!-- OPAQUE COUNTDOWN OVERLAY -->
-    <div id="countdown-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md hidden transition-opacity duration-300">
-        <div id="countdown" class="text-white text-6xl font-light">3</div>
-        <p class="text-gray-400 tracking-widest-xl mt-4 uppercase text-sm" id="countdown-msg">Prepare to Balance</p>
+    <div id="countdown-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-lg hidden transition-opacity duration-300">
+        <div id="countdown" class="text-white text-7xl font-light drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]">3</div>
+        <p class="text-indigo-300 tracking-widest-xl mt-6 uppercase text-sm" id="countdown-msg">Prepare to Balance</p>
     </div>
 
     <!-- OPAQUE PAUSE OVERLAY -->
-    <div id="pause-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
-        <h2 class="text-3xl font-light text-white tracking-widest-xl mb-10">PAUSED</h2>
+    <div id="pause-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-lg hidden opacity-0 transition-opacity duration-300">
+        <h2 class="text-4xl font-light text-white tracking-widest-xl mb-12 drop-shadow-md">PAUSED</h2>
         <div class="flex flex-col gap-4 w-64">
-            <button id="resume-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200">
+            <button id="resume-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
                 RESUME
             </button>
-            <button id="leave-btn" class="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/20">
-                LEAVE GAME
+            <button id="leave-btn" class="px-8 py-4 bg-white/5 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/10 hover:border-white/40">
+                ABORT MISSION
             </button>
         </div>
     </div>
 
     <!-- GAME OVER SCREEN -->
-    <div id="game-over-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-6 text-center hidden">
-        <h2 class="text-3xl font-light text-red-400 tracking-widest-xl mb-1">CONTAINMENT LOST</h2>
+    <div id="game-over-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-4 sm:m-6 p-6 text-center hidden">
+        <h2 class="text-3xl sm:text-4xl font-light text-red-500 tracking-widest-xl mb-2 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">CONTAINMENT LOST</h2>
         
-        <div class="glass-panel p-6 mt-6 mb-6 w-full max-w-xs">
-            <p class="text-sm text-gray-400 uppercase tracking-wider mb-1">Final Score</p>
-            <p id="final-score" class="text-4xl font-semibold mb-4">0</p>
+        <div class="glass-panel p-8 mt-8 mb-8 w-full max-w-xs relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent"></div>
+            <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Final Evaluation</p>
+            <p id="final-score" class="text-5xl font-semibold mb-6 text-white drop-shadow-md">0</p>
             
-            <div id="highscore-entry" class="hidden flex flex-col items-center">
-                <p class="text-xs text-[#ff7eb3] uppercase tracking-widest mb-2">New Personal Best!</p>
-                <input type="text" id="player-name" maxlength="3" placeholder="AAA" class="w-24 py-2 uppercase mb-3" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
-                <button id="save-score-btn" class="px-6 py-2 bg-indigo-600/50 hover:bg-indigo-500 text-white rounded-full text-sm font-semibold tracking-wide w-full border border-indigo-400/50">
-                    SAVE TO DEVICE
+            <div id="highscore-entry" class="hidden flex flex-col items-center border-t border-white/10 pt-6">
+                <p class="text-xs text-pink-400 uppercase tracking-widest mb-3 animate-pulse">New Personal Best!</p>
+                <input type="text" id="player-name" maxlength="3" placeholder="AAA" class="w-24 py-2 uppercase mb-4" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+                <button id="save-score-btn" class="px-6 py-3 bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-full text-sm font-semibold tracking-wide w-full shadow-[0_0_15px_rgba(79,70,229,0.4)]">
+                    ENCRYPT DATA
                 </button>
             </div>
-            <p id="score-saved-msg" class="text-xs text-green-400 hidden mt-4">Score Saved.</p>
+            <p id="score-saved-msg" class="text-xs text-green-400 hidden mt-6">Data Encrypted.</p>
         </div>
 
-        <button id="restart-btn" class="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/20">
-            MAIN MENU
+        <button id="restart-btn" class="px-10 py-4 bg-white/5 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/10 hover:border-white/40 transition-all">
+            SYSTEM REBOOT
         </button>
     </div>
 
-    <!-- MAIN GAME UI -->
-    <div id="game-ui" class="flex-1 flex flex-col p-4 sm:p-6 hidden opacity-0 transition-opacity duration-1000 relative">
+    <!-- MAIN GAME HUD -->
+    <div id="game-ui" class="flex-1 flex flex-col p-4 sm:p-6 hidden opacity-0 transition-opacity duration-1000 relative z-40 pointer-events-none">
         
         <!-- Header / Stats -->
-        <header class="flex justify-between items-center mb-4 sm:mb-8 relative shrink-0">
-            <!-- Pause Button -->
-            <button id="pause-btn" class="absolute left-0 top-1/2 -translate-y-1/2 p-3 glass-panel rounded-full hover:bg-white/10 z-20 text-white/70 hover:text-white transition-colors">
+        <header class="flex justify-between items-center mb-4 sm:mb-8 relative shrink-0 pointer-events-auto">
+            <button id="pause-btn" class="absolute left-0 top-1/2 -translate-y-1/2 p-3 glass-panel rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
             </button>
 
-            <!-- Spacers to center align stats next to pause btn -->
-            <div class="glass-panel px-3 sm:px-4 py-2 flex flex-col ml-[4.5rem]">
-                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Score</span>
-                <span id="ui-score" class="text-lg sm:text-xl font-semibold transition-colors duration-300">0</span>
+            <div class="glass-panel px-4 py-2 flex flex-col ml-[4.5rem]">
+                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Score</span>
+                <span id="ui-score" class="text-xl sm:text-2xl font-bold transition-colors duration-300">0</span>
             </div>
-            <div class="glass-panel px-3 sm:px-4 py-2 flex flex-col items-end">
-                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Multiplier</span>
-                <span id="ui-multiplier" class="text-lg sm:text-xl font-semibold text-indigo-400 transition-all duration-300">x1.0</span>
+            <div class="glass-panel px-4 py-2 flex flex-col items-end">
+                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Multiplier</span>
+                <span id="ui-multiplier" class="text-xl sm:text-2xl font-bold text-indigo-400 transition-all duration-300">x1.0</span>
             </div>
         </header>
 
-        <!-- Play Area -->
-        <div class="flex-1 flex items-center justify-center relative overflow-hidden" id="board-container">
-            <div id="game-board">
-                <div class="center-target"></div>
-                <div id="particle"></div>
-                <!-- Powerups/Floating Text injected here -->
-            </div>
-        </div>
+        <!-- Floating UI Anchor (for HTML-based floating text) -->
+        <div class="flex-1 relative" id="hud-anchor"></div>
 
         <!-- Telemetry Data -->
-        <div class="grid grid-cols-2 gap-4 mt-4 sm:mt-8 shrink-0">
+        <div class="grid grid-cols-2 gap-4 mt-4 sm:mt-8 shrink-0 pointer-events-auto">
             <div class="glass-panel p-4 flex flex-col justify-center text-center">
                 <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-2">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Time Survived
+                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Uptime
                 </span>
                 <div class="flex justify-center items-end gap-1">
-                    <span id="ui-time" class="text-2xl font-semibold">0</span>
+                    <span id="ui-time" class="text-2xl font-bold">0</span>
                     <span class="text-gray-400 text-sm mb-0.5">s</span>
                 </div>
             </div>
 
             <div class="glass-panel p-4 flex flex-col justify-center text-center relative overflow-hidden">
-                <!-- Status Effect Backgrounds -->
                 <div id="effect-bg" class="absolute inset-0 opacity-0 transition-opacity duration-300 z-0"></div>
-                
                 <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-2 relative z-10">
                     <svg class="w-3 h-3 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     <span id="ui-sens-label">Sensitivity</span>
                 </span>
                 <div class="flex justify-center items-end gap-1 relative z-10">
-                    <span id="ui-sensitivity" class="text-2xl font-semibold text-orange-400 transition-colors duration-300">1.0</span>
+                    <span id="ui-sensitivity" class="text-2xl font-bold text-orange-400 transition-colors duration-300">1.0</span>
                     <span id="ui-sens-suffix" class="text-gray-400 text-sm mb-0.5">x</span>
                 </div>
             </div>
@@ -424,24 +299,20 @@
         const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#050507"/><circle cx="256" cy="256" r="150" stroke="#6366f1" stroke-width="20" fill="none"/><circle cx="256" cy="256" r="40" fill="#fff"/></svg>`;
         const manifestBlob = new Blob([JSON.stringify({
             name: "Equilibrium", short_name: "Equil", start_url: "./", display: "standalone",
-            background_color: "#050507", theme_color: "#050507",
+            background_color: "#030305", theme_color: "#030305",
             icons: [{ src: 'data:image/svg+xml;base64,' + btoa(iconSvg), sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }]
         })], { type: 'application/json' });
         document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
 
-        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v7-1').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v8').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
         if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' })));
     </script>
 
-    <!-- Main Game Logic -->
+    <!-- Canvas Engine & Game Logic -->
     <script>
         // Highscore Storage
-        let bestScores = {
-            classic: { name: '---', score: 0 },
-            arcade: { name: '---', score: 0 },
-            death: { name: '---', score: 0 }
-        };
-        const LS_KEY = 'equilibrium_v7_scores';
+        let bestScores = { classic: { name: '---', score: 0 }, arcade: { name: '---', score: 0 }, death: { name: '---', score: 0 } };
+        const LS_KEY = 'equilibrium_v8_scores';
 
         function loadHighscores() {
             const saved = localStorage.getItem(LS_KEY);
@@ -454,9 +325,7 @@
                     document.getElementById('best-arcade-score').innerText = (bestScores.arcade?.score || 0).toLocaleString();
                     document.getElementById('best-death-name').innerText = bestScores.death?.name || '---';
                     document.getElementById('best-death-score').innerText = (bestScores.death?.score || 0).toLocaleString();
-                } catch(e) {
-                    console.error("Could not parse highscores", e);
-                }
+                } catch(e) { console.error(e); }
             }
         }
         loadHighscores();
@@ -471,20 +340,18 @@
             pauseScreen: document.getElementById('pause-screen'),
             gameOverScreen: document.getElementById('game-over-screen'),
             gameUI: document.getElementById('game-ui'),
+            hudAnchor: document.getElementById('hud-anchor'),
             
             btnStartClassic: document.getElementById('start-classic-btn'),
             btnStartArcade: document.getElementById('start-arcade-btn'),
             btnStartDeath: document.getElementById('start-death-btn'),
             btnProceedArcade: document.getElementById('proceed-arcade-btn'),
-            
             btnPause: document.getElementById('pause-btn'),
             btnResume: document.getElementById('resume-btn'),
             btnLeave: document.getElementById('leave-btn'),
             btnRestart: document.getElementById('restart-btn'),
             btnSave: document.getElementById('save-score-btn'),
             
-            particle: document.getElementById('particle'),
-            board: document.getElementById('game-board'),
             uiScore: document.getElementById('ui-score'),
             uiMultiplier: document.getElementById('ui-multiplier'),
             uiTime: document.getElementById('ui-time'),
@@ -499,11 +366,59 @@
             savedMsg: document.getElementById('score-saved-msg')
         };
 
+        // Canvas Setup
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let dpr = window.devicePixelRatio || 1;
+        let cw, ch, cx, cy;
+
+        function resizeCanvas() {
+            cw = window.innerWidth;
+            ch = window.innerHeight;
+            canvas.width = cw * dpr;
+            canvas.height = ch * dpr;
+            ctx.scale(dpr, dpr);
+            cx = cw / 2;
+            cy = ch / 2;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Constants
         const BASE_PHYSICS_SENSITIVITY = 0.05;
-        const CLASSIC_MAX_RADIUS = 128; // 140px board - 12px particle
-        const ARCADE_MAX_RADIUS = 158;  // 170px board - 12px particle
-        const ION_MAX_RADIUS = 50;      // Shrink target
-        
+        const CLASSIC_MAX_RADIUS = 135; 
+        const ARCADE_MAX_RADIUS = 165;  
+        const ION_MAX_RADIUS = 50;      
+        const PARTICLE_RADIUS = 12;
+        const CENTER_RADIUS = 15;
+        const POWERUP_RADIUS = 12;
+
+        const COLORS = {
+            bg: '#030305',
+            grid: 'rgba(255,255,255,0.03)',
+            boardLine: 'rgba(255, 255, 255, 0.15)',
+            boardGlow: 'rgba(255, 255, 255, 0.05)',
+            core: '#ffffff',
+            coreGlow: '#6366f1',
+            centered: '#ff7eb3',
+            centeredGlow: '#ec4899',
+            death: '#ef4444',
+            deathGlow: '#dc2626',
+            higgs: '#eab308',
+            ion: '#f97316',
+            x2: '#3b82f6',
+            quark: '#000000',
+            plus5: '#22c55e'
+        };
+
+        const POWERUP_TYPES = [
+            { id: 'x2', color: COLORS.x2, text: 'x2', weight: 20 },
+            { id: 'quark', color: COLORS.death, text: 'Q', weight: 10, isQuark: true },
+            { id: 'ion', color: COLORS.ion, text: '⚡', weight: 20 },
+            { id: 'higgs', color: COLORS.higgs, text: 'H', weight: 10 },
+            { id: 'plus5', color: COLORS.plus5, text: '+5', weight: 40 }
+        ];
+
         let state = {
             isPlaying: false, isPaused: false, isCountingDown: false, mode: 'CLASSIC',
             score: 0, timeElapsed: 0, lastFrameTime: 0,
@@ -511,23 +426,23 @@
             displaySensitivity: 1.0, physicsSensitivity: 0.05,
             currentMaxRadius: CLASSIC_MAX_RADIUS, centerAccumulator: 0,
             
-            // Arcade specifics
-            powerups: [], lastSpawnInterval: 0, 
-            effects: { x2: 0, ion: 0, higgs: 0 },
-            wasIonActive: false,
-
-            animFrame: null, shrapnelElements: []
+            trail: [], ripples: [], particles: [], powerups: [], 
+            lastSpawnInterval: 0, effects: { x2: 0, ion: 0, higgs: 0 },
+            wasIonActive: false, gridOffsetX: 0, gridOffsetY: 0,
+            dangerPulse: 0,
+            animFrame: null
         };
 
-        const config = { particleRadius: 12, centerRadius: 15, powerupRadius: 12 };
-
-        const POWERUP_TYPES = [
-            { id: 'x2', cls: 'pu-x2', text: 'x2', weight: 20 },
-            { id: 'quark', cls: 'pu-quark', text: 'Q', weight: 10 },
-            { id: 'ion', cls: 'pu-ion', text: '⚡', weight: 20 },
-            { id: 'higgs', cls: 'pu-higgs', text: 'H', weight: 10 },
-            { id: 'plus5', cls: 'pu-plus5', text: '+5', weight: 40 }
-        ];
+        // Input
+        const handleOrientation = (e) => {
+            if (!state.isPlaying || state.isPaused || state.isCountingDown) return;
+            let x = Math.max(-90, Math.min(90, e.gamma || 0));
+            let y = Math.max(-90, Math.min(90, e.beta || 0));
+            state.vx += x * state.physicsSensitivity;
+            state.vy += y * state.physicsSensitivity;
+            state.vx *= 0.94; 
+            state.vy *= 0.94;
+        };
 
         function getRandomPowerup() {
             let sum = POWERUP_TYPES.reduce((acc, p) => acc + p.weight, 0);
@@ -539,70 +454,46 @@
             return POWERUP_TYPES[0];
         }
 
-        // Hardware Listener
-        const handleOrientation = (e) => {
-            if (!state.isPlaying || state.isPaused || state.isCountingDown) return;
-            let x = Math.max(-90, Math.min(90, e.gamma || 0));
-            let y = Math.max(-90, Math.min(90, e.beta || 0));
-            
-            state.vx += x * state.physicsSensitivity;
-            state.vy += y * state.physicsSensitivity;
-            
-            state.vx *= 0.94; // friction
-            state.vy *= 0.94;
-        };
-
         const spawnFloatingText = (text, isLarge = false) => {
             const el = document.createElement('div');
             el.className = `score-float ${isLarge ? 'score-float-large' : ''}`;
             el.innerText = text;
-            el.style.transform = `translate(${state.x}px, ${state.y - 20}px)`;
-            DOM.board.appendChild(el);
-            setTimeout(() => el.remove(), 1000);
+            
+            // Convert canvas local coords (state.x) to screen coords
+            const screenX = cx + state.x;
+            const screenY = cy + state.y - 30; // offset slightly up
+            
+            el.style.left = `${screenX}px`;
+            el.style.top = `${screenY}px`;
+            el.style.transform = 'translate(-50%, -50%)'; // center origin
+            
+            DOM.hudAnchor.appendChild(el);
+            setTimeout(() => el.remove(), 1200);
         };
 
-        // Effects
-        const triggerExplosion = () => {
-            DOM.particle.style.display = 'none';
-            const color = state.mode === 'DEATH' ? '#ef4444' : '#ff7eb3';
-            const shadow = state.mode === 'DEATH' ? '#dc2626' : '#ec4899';
-
-            for (let i = 0; i < 15; i++) {
-                const shrapnel = document.createElement('div');
-                shrapnel.className = 'shrapnel';
-                shrapnel.style.background = color;
-                shrapnel.style.boxShadow = `0 0 10px ${shadow}`;
-                shrapnel.style.transform = `translate(${state.x}px, ${state.y}px)`;
-                DOM.board.appendChild(shrapnel);
-                state.shrapnelElements.push(shrapnel);
-
-                requestAnimationFrame(() => {
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = 40 + Math.random() * 80;
-                    shrapnel.style.transform = `translate(${state.x + Math.cos(angle) * distance}px, ${state.y + Math.sin(angle) * distance}px)`;
-                    shrapnel.style.opacity = '0';
+        const createExplosion = () => {
+            const baseColor = state.mode === 'DEATH' ? COLORS.death : COLORS.centered;
+            for (let i = 0; i < 40; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 8;
+                state.particles.push({
+                    x: state.x, y: state.y,
+                    vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                    life: 1.0, maxLife: 1.0 + Math.random(),
+                    color: baseColor, size: 2 + Math.random() * 4
                 });
             }
         };
 
-        const clearBoardEntities = () => {
-            state.shrapnelElements.forEach(el => el.remove());
-            state.shrapnelElements = [];
-            state.powerups.forEach(p => p.el.remove());
-            state.powerups = [];
-            // Remove lingering floating text
-            DOM.board.querySelectorAll('.score-float').forEach(el => el.remove());
-
-            DOM.particle.style.display = 'block';
-            DOM.particle.classList.remove('invincible');
-            DOM.board.classList.remove('ion-destabilized', 'higgs-barrier');
+        const createRipple = () => {
+            state.ripples.push({ r: PARTICLE_RADIUS, life: 1.0 });
         };
 
         const applyPowerup = (id) => {
             if (id === 'quark') {
                 gameOver();
             } else if (id === 'x2') {
-                state.effects.x2 = 5.0; // 5 seconds
+                state.effects.x2 = 5.0;
             } else if (id === 'ion') {
                 state.effects.ion = 10.0;
                 state.wasIonActive = true;
@@ -614,173 +505,345 @@
             }
         };
 
-        const gameLoop = () => {
-            if (!state.isPlaying || state.isPaused || state.isCountingDown) {
-                state.lastFrameTime = Date.now(); 
-                if(state.isPlaying) state.animFrame = requestAnimationFrame(gameLoop);
-                return;
+        // --- RENDER ENGINE ---
+        function drawGrid() {
+            ctx.fillStyle = COLORS.bg;
+            ctx.fillRect(0, 0, cw, ch);
+            
+            // Parallax Grid
+            ctx.fillStyle = COLORS.grid;
+            const gridSize = 40;
+            const offsetX = state.gridOffsetX % gridSize;
+            const offsetY = state.gridOffsetY % gridSize;
+            
+            for (let x = offsetX - gridSize; x < cw + gridSize; x += gridSize) {
+                for (let y = offsetY - gridSize; y < ch + gridSize; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 1.5, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function drawBoard() {
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            // Danger Pulse (Background glow)
+            if (state.dangerPulse > 0) {
+                ctx.beginPath();
+                ctx.arc(0, 0, state.currentMaxRadius, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(249, 115, 22, ${state.dangerPulse * 0.2})`;
+                ctx.fill();
+                state.dangerPulse -= 0.05;
             }
 
-            const now = Date.now();
-            const dt = (now - state.lastFrameTime) / 1000;
-            state.lastFrameTime = now;
-            state.timeElapsed += dt;
+            // Main Boundary
+            ctx.beginPath();
+            ctx.arc(0, 0, state.currentMaxRadius, 0, Math.PI*2);
+            
+            if (state.mode === 'ARCADE' && state.effects.higgs > 0) {
+                ctx.strokeStyle = COLORS.higgs;
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = COLORS.higgs;
+            } else if (state.mode === 'ARCADE' && state.effects.ion > 0) {
+                ctx.strokeStyle = COLORS.ion;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([10, 10]); // Erratic dashed line
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = COLORS.ion;
+            } else if (state.mode === 'DEATH') {
+                ctx.strokeStyle = `rgba(239, 68, 68, 0.6)`;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = COLORS.death;
+            } else {
+                ctx.strokeStyle = COLORS.boardLine;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([10, 15]);
+                ctx.shadowBlur = 0;
+            }
+            
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
 
-            // Physics Movement
+            // Safe Zone / Center Target
+            ctx.beginPath();
+            ctx.arc(0, 0, CENTER_RADIUS, 0, Math.PI*2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // Rotating inner reticle
+            ctx.rotate(state.timeElapsed);
+            ctx.beginPath();
+            ctx.arc(0, 0, CENTER_RADIUS + 4, 0, Math.PI*2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.setLineDash([5, 10]);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function drawPowerups() {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 10px Inter';
+
+            for (let p of state.powerups) {
+                // Pulse animation
+                const scale = 1 + Math.sin(state.timeElapsed * 5 + p.x) * 0.1;
+                const alpha = Math.min(1, p.life);
+                
+                ctx.globalAlpha = alpha;
+                ctx.translate(p.x, p.y);
+                ctx.scale(scale, scale);
+
+                ctx.beginPath();
+                ctx.arc(0, 0, POWERUP_RADIUS, 0, Math.PI*2);
+                
+                if (p.type.isQuark) {
+                    ctx.fillStyle = '#000';
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = p.type.color;
+                    ctx.stroke();
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = p.type.color;
+                } else {
+                    ctx.fillStyle = p.type.color;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = p.type.color;
+                    ctx.fill();
+                }
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = p.type.isQuark ? p.type.color : (p.type.id === 'higgs' ? '#000' : '#fff');
+                ctx.fillText(p.type.text, 0, 1); // 1px visual tweak
+
+                ctx.scale(1/scale, 1/scale);
+                ctx.translate(-p.x, -p.y);
+            }
+            ctx.restore();
+        }
+
+        function drawPlayer(isCentered) {
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            // Draw Trail
+            if (state.trail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(state.trail[0].x, state.trail[0].y);
+                for (let i = 1; i < state.trail.length; i++) {
+                    const pt = state.trail[i];
+                    ctx.lineTo(pt.x, pt.y);
+                }
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                let trailColor = isCentered ? COLORS.centered : COLORS.coreGlow;
+                if (state.mode === 'DEATH' && isCentered) trailColor = COLORS.death;
+                if (state.mode === 'ARCADE' && state.effects.higgs > 0) trailColor = COLORS.higgs;
+                
+                ctx.strokeStyle = trailColor;
+                ctx.globalAlpha = 0.4;
+                ctx.lineWidth = PARTICLE_RADIUS * 1.5;
+                ctx.stroke();
+                
+                ctx.lineWidth = PARTICLE_RADIUS * 0.5;
+                ctx.globalAlpha = 0.8;
+                ctx.strokeStyle = '#fff';
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
+
+            // Draw Ripples
+            for (let i = state.ripples.length - 1; i >= 0; i--) {
+                let r = state.ripples[i];
+                ctx.beginPath();
+                ctx.arc(state.x, state.y, r.r, 0, Math.PI*2);
+                let ripCol = state.mode === 'DEATH' ? COLORS.death : COLORS.centered;
+                if (state.mode === 'ARCADE' && state.effects.higgs > 0) ripCol = COLORS.higgs;
+                ctx.strokeStyle = ripCol;
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = r.life;
+                ctx.stroke();
+                
+                r.r += 1;
+                r.life -= 0.03;
+                if (r.life <= 0) state.ripples.splice(i, 1);
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Draw Core
+            if (state.isPlaying && !state.particles.length) { // don't draw if exploded
+                ctx.beginPath();
+                ctx.arc(state.x, state.y, PARTICLE_RADIUS, 0, Math.PI*2);
+                
+                let coreCol = isCentered ? COLORS.centered : COLORS.core;
+                let glowCol = isCentered ? COLORS.centeredGlow : COLORS.coreGlow;
+                
+                if (state.mode === 'DEATH' && isCentered) {
+                    coreCol = COLORS.death; glowCol = COLORS.deathGlow;
+                }
+                if (state.mode === 'ARCADE' && state.effects.higgs > 0) {
+                    coreCol = '#fef08a'; glowCol = COLORS.higgs;
+                }
+
+                ctx.fillStyle = coreCol;
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = glowCol;
+                ctx.fill();
+                
+                // inner intense core
+                ctx.beginPath();
+                ctx.arc(state.x, state.y, PARTICLE_RADIUS * 0.6, 0, Math.PI*2);
+                ctx.fillStyle = '#fff';
+                ctx.shadowBlur = 0;
+                ctx.fill();
+            }
+
+            // Draw Explosion Particles
+            for (let i = state.particles.length - 1; i >= 0; i--) {
+                let p = state.particles[i];
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = p.color;
+                ctx.fill();
+                
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95; // drag
+                p.vy *= 0.95;
+                p.life -= 0.02;
+                if (p.life <= 0) state.particles.splice(i, 1);
+            }
+
+            ctx.restore();
+        }
+
+        // --- UPDATE LOOP ---
+        const updatePhysics = (dt) => {
+            // Movement
             state.x += state.vx;
             state.y += state.vy;
             let distFromCenter = Math.hypot(state.x, state.y);
 
-            // ================== POWERUP LOGIC (ARCADE) ==================
+            // Grid Parallax
+            state.gridOffsetX -= state.vx * 0.5;
+            state.gridOffsetY -= state.vy * 0.5;
+
+            // Trail Logic
+            state.trail.push({x: state.x, y: state.y});
+            if (state.trail.length > 15) state.trail.shift();
+
+            // ================== ARCADE LOGIC ==================
             if (state.mode === 'ARCADE') {
-                // Decay active effects
                 if (state.effects.x2 > 0) state.effects.x2 -= dt;
                 if (state.effects.ion > 0) state.effects.ion -= dt;
                 if (state.effects.higgs > 0) state.effects.higgs -= dt;
 
-                // Spawning check (20% chance every 10 seconds)
                 const currentInterval = Math.floor(state.timeElapsed / 10);
                 if (currentInterval > state.lastSpawnInterval) {
                     state.lastSpawnInterval = currentInterval;
-                    
                     if (Math.random() <= 0.20 && state.powerups.length < 3) {
                         const type = getRandomPowerup();
-                        const el = document.createElement('div');
-                        el.className = `powerup ${type.cls}`;
-                        el.innerText = type.text;
-                        
-                        // Spawn within whatever the current safe area is
                         const angle = Math.random() * Math.PI * 2;
-                        const r = Math.random() * (state.currentMaxRadius - config.powerupRadius);
-                        const px = Math.cos(angle) * r;
-                        const py = Math.sin(angle) * r;
-                        
-                        el.style.transform = `translate(${px}px, ${py}px)`;
-                        DOM.board.appendChild(el);
-                        
-                        state.powerups.push({ id: type.id, el: el, x: px, y: py, life: 8.0 });
+                        const r = Math.random() * (state.currentMaxRadius - POWERUP_RADIUS);
+                        state.powerups.push({ 
+                            type: type, id: type.id, 
+                            x: Math.cos(angle) * r, y: Math.sin(angle) * r, 
+                            life: 8.0 
+                        });
                     }
                 }
 
-                // Powerup Collision & Lifecycle
                 for (let i = state.powerups.length - 1; i >= 0; i--) {
                     let p = state.powerups[i];
                     p.life -= dt;
-                    
-                    if (Math.hypot(state.x - p.x, state.y - p.y) < (config.particleRadius + config.powerupRadius)) {
+                    if (Math.hypot(state.x - p.x, state.y - p.y) < (PARTICLE_RADIUS + POWERUP_RADIUS)) {
                         applyPowerup(p.id);
-                        p.el.remove();
                         state.powerups.splice(i, 1);
                         continue;
                     }
-
-                    if (p.life <= 0) {
-                        p.el.style.opacity = '0';
-                        setTimeout(() => p.el.remove(), 300);
-                        state.powerups.splice(i, 1);
-                    }
+                    if (p.life <= 0) state.powerups.splice(i, 1);
                 }
             }
-            // ============================================================
 
-            // ================== SAFE AREA & SENSITIVITY ==================
+            // ================== AREA & SENSITIVITY ==================
             let newDisplaySens = 1.0;
             const tensPassed = Math.floor(state.timeElapsed / 10);
             
             if (state.mode === 'DEATH') {
                 newDisplaySens = 1.0 + (tensPassed * 1.0); 
-                const cycleTime = state.timeElapsed % 60;
-                const shrinkRatio = cycleTime / 60;
-                state.currentMaxRadius = CLASSIC_MAX_RADIUS - (shrinkRatio * 93); // Shrinks to ~35
-                
+                const shrinkRatio = (state.timeElapsed % 60) / 60;
+                state.currentMaxRadius = CLASSIC_MAX_RADIUS - (shrinkRatio * 93); 
             } else if (state.mode === 'ARCADE') {
                 newDisplaySens = 1.0; 
-                
-                // Ion Shrinking logic (gradual over 10 seconds)
                 if (state.effects.ion > 0) {
                     const progress = (10.0 - state.effects.ion) / 10.0;
                     state.currentMaxRadius = ARCADE_MAX_RADIUS - (progress * (ARCADE_MAX_RADIUS - ION_MAX_RADIUS));
-                    DOM.board.classList.add('ion-destabilized');
                 } else {
                     if (state.wasIonActive) {
-                        // Survived the Ion effect
                         state.score += 100;
                         spawnFloatingText('+100', true);
                         state.wasIonActive = false;
                     }
                     state.currentMaxRadius = ARCADE_MAX_RADIUS;
-                    DOM.board.classList.remove('ion-destabilized');
                 }
             } else {
                 newDisplaySens = 1.0 + (tensPassed * 0.1) + (Math.floor(state.timeElapsed / 60) * 0.6);
                 state.currentMaxRadius = CLASSIC_MAX_RADIUS; 
             }
 
-            const visualBoardSize = (state.currentMaxRadius + config.particleRadius) * 2;
-            DOM.board.style.width = `${visualBoardSize}px`;
-            DOM.board.style.height = `${visualBoardSize}px`;
-
-            // Update Physical Sensitivity
             const safeSens = parseFloat(newDisplaySens.toFixed(1));
             if (safeSens !== state.displaySensitivity && state.mode !== 'ARCADE') {
                 state.displaySensitivity = safeSens;
                 state.physicsSensitivity = BASE_PHYSICS_SENSITIVITY * state.displaySensitivity;
                 DOM.uiSensitivity.innerText = state.displaySensitivity.toFixed(1);
+                state.dangerPulse = 1.0;
                 
-                DOM.board.classList.add('danger-pulse');
                 DOM.uiSensitivity.classList.add('text-red-500', 'scale-125');
-                setTimeout(() => {
-                    DOM.board.classList.remove('danger-pulse');
-                    DOM.uiSensitivity.classList.remove('text-red-500', 'scale-125');
-                }, 500);
+                setTimeout(() => DOM.uiSensitivity.classList.remove('text-red-500', 'scale-125'), 500);
             }
-            // ============================================================
 
-            // ================== BOUNDARY / HIGGS PHYSICS ================
+            // ================== BOUNDARIES ================
             if (state.mode === 'ARCADE' && state.effects.higgs > 0) {
-                DOM.particle.classList.add('invincible');
-                DOM.board.classList.add('higgs-barrier');
-                
-                if (distFromCenter > state.currentMaxRadius) {
-                    // Physical Barrier reflection/constraint
+                if (distFromCenter > state.currentMaxRadius - PARTICLE_RADIUS) { // exact physics barrier
                     const angle = Math.atan2(state.y, state.x);
-                    state.x = Math.cos(angle) * state.currentMaxRadius;
-                    state.y = Math.sin(angle) * state.currentMaxRadius;
-                    
-                    // Zero out outward momentum (slide along wall instead of bouncing crazy)
+                    const safeDist = state.currentMaxRadius - PARTICLE_RADIUS;
+                    state.x = Math.cos(angle) * safeDist;
+                    state.y = Math.sin(angle) * safeDist;
                     state.vx *= 0.5;
                     state.vy *= 0.5;
-                    
-                    // Re-evaluate dist for center check
-                    distFromCenter = state.currentMaxRadius; 
+                    distFromCenter = safeDist; 
                 }
             } else {
-                DOM.particle.classList.remove('invincible');
-                DOM.board.classList.remove('higgs-barrier');
                 if (distFromCenter > state.currentMaxRadius) {
                     gameOver();
-                    return;
+                    return false;
                 }
             }
 
-            // Apply position
-            DOM.particle.style.transform = `translate(${state.x}px, ${state.y}px)`;
-
             // ================== MULTIPLIER ==================
-            const isCentered = distFromCenter < config.centerRadius;
+            const isCentered = distFromCenter < CENTER_RADIUS;
             if (isCentered) {
                 state.centerAccumulator += dt;
-                DOM.particle.classList.add('centered');
-            } else {
-                DOM.particle.classList.remove('centered');
+                if (Math.random() < 0.1) createRipple();
             }
 
             const secInCenter = Math.floor(state.centerAccumulator);
             const tensInCenter = Math.floor(state.centerAccumulator / 10);
+            let finalMultiplier = 1.0 + (secInCenter * 0.1) + (tensInCenter * 1.0);
             
-            let rawMultiplier = 1.0 + (secInCenter * 0.1) + (tensInCenter * 1.0);
-            
-            let finalMultiplier = rawMultiplier;
             if (state.mode === 'ARCADE' && state.effects.x2 > 0) {
                 finalMultiplier *= 2;
                 DOM.uiMultiplier.classList.add('x2-glow');
@@ -790,51 +853,81 @@
             } else {
                 DOM.uiMultiplier.classList.remove('multiplier-glow', 'x2-glow');
             }
-            // ============================================================
 
             state.score += (finalMultiplier * 10 * dt); 
-
-            // Update UI 
+            
+            // HUD Updates
             if (Math.floor(state.score) !== parseInt(DOM.uiScore.innerText.replace(/,/g, ''))) {
                 DOM.uiScore.innerText = Math.floor(state.score).toLocaleString();
             }
-            const timeInt = Math.floor(state.timeElapsed);
-            if (timeInt !== parseInt(DOM.uiTime.innerText)) {
-                DOM.uiTime.innerText = timeInt;
+            if (Math.floor(state.timeElapsed) !== parseInt(DOM.uiTime.innerText)) {
+                DOM.uiTime.innerText = Math.floor(state.timeElapsed);
             }
             DOM.uiMultiplier.innerText = `x${finalMultiplier.toFixed(1)}`;
             
+            // Arcade Status Panel
             if (state.mode === 'ARCADE') {
                 if (state.effects.x2 > 0) {
                     DOM.uiSensLabel.innerText = "x2 ACTIVE";
                     DOM.uiSensitivity.innerText = Math.ceil(state.effects.x2);
                     DOM.uiSensSuffix.innerText = 's';
-                    DOM.uiSensitivity.className = "text-2xl font-semibold text-blue-400";
+                    DOM.uiSensitivity.className = "text-2xl font-bold text-blue-400";
                     DOM.effectBg.className = "absolute inset-0 bg-blue-500/20 opacity-100 transition-opacity duration-300 z-0";
                 } else if (state.effects.higgs > 0) {
                     DOM.uiSensLabel.innerText = "BARRIER";
                     DOM.uiSensitivity.innerText = Math.ceil(state.effects.higgs);
                     DOM.uiSensSuffix.innerText = 's';
-                    DOM.uiSensitivity.className = "text-2xl font-semibold text-yellow-500";
+                    DOM.uiSensitivity.className = "text-2xl font-bold text-yellow-500";
                     DOM.effectBg.className = "absolute inset-0 bg-yellow-500/20 opacity-100 transition-opacity duration-300 z-0";
                 } else if (state.effects.ion > 0) {
                     DOM.uiSensLabel.innerText = "SHRINKING";
                     DOM.uiSensitivity.innerText = Math.ceil(state.effects.ion);
                     DOM.uiSensSuffix.innerText = 's';
-                    DOM.uiSensitivity.className = "text-2xl font-semibold text-orange-500";
+                    DOM.uiSensitivity.className = "text-2xl font-bold text-orange-500";
                     DOM.effectBg.className = "absolute inset-0 bg-orange-500/20 opacity-100 transition-opacity duration-300 z-0";
                 } else {
-                    DOM.uiSensLabel.innerText = "NORMAL";
-                    DOM.uiSensitivity.innerText = "---";
+                    DOM.uiSensLabel.innerText = "STATUS";
+                    DOM.uiSensitivity.innerText = "STABLE";
                     DOM.uiSensSuffix.innerText = '';
-                    DOM.uiSensitivity.className = "text-xl font-semibold text-gray-500";
+                    DOM.uiSensitivity.className = "text-xl font-bold text-gray-500";
                     DOM.effectBg.className = "absolute inset-0 opacity-0 transition-opacity duration-300 z-0";
                 }
             }
 
-            state.animFrame = requestAnimationFrame(gameLoop);
+            return isCentered;
         };
 
+        const loop = () => {
+            if (!state.isPlaying || state.isPaused || state.isCountingDown) {
+                state.lastFrameTime = Date.now(); 
+                if (state.isPlaying && !state.isPaused) drawGrid(); // Keep drawing bg if exploded
+                if (state.particles.length > 0) { // Keep animating particles even if game over state triggered
+                    drawGrid();
+                    drawBoard();
+                    drawPlayer(false);
+                    state.animFrame = requestAnimationFrame(loop);
+                    return;
+                }
+                if (state.isPlaying) state.animFrame = requestAnimationFrame(loop);
+                return;
+            }
+
+            const now = Date.now();
+            const dt = Math.min((now - state.lastFrameTime) / 1000, 0.1); // cap dt
+            state.lastFrameTime = now;
+
+            const isCentered = updatePhysics(dt);
+            
+            if (state.isPlaying) {
+                drawGrid();
+                drawBoard();
+                drawPowerups();
+                drawPlayer(isCentered);
+                state.animFrame = requestAnimationFrame(loop);
+            }
+        };
+
+        // --- FLOW CONTROL ---
         const startCountdown = async (isResume = false) => {
             state.isCountingDown = true;
             
@@ -864,7 +957,7 @@
 
             for (let i = 3; i > 0; i--) {
                 DOM.countdownText.innerText = i;
-                DOM.countdownText.style.transform = 'scale(1.2)';
+                DOM.countdownText.style.transform = 'scale(1.3)';
                 setTimeout(() => DOM.countdownText.style.transform = 'scale(1)', 200);
                 await new Promise(r => setTimeout(r, 1000));
             }
@@ -882,14 +975,13 @@
         };
 
         const startGame = () => {
-            clearBoardEntities();
             state = { 
                 ...state, isPlaying: true, isPaused: false, isCountingDown: false,
                 score: 0, timeElapsed: 0, lastFrameTime: Date.now(), centerAccumulator: 0,
-                x: 0, y: 0, vx: 0, vy: 0, 
+                x: 0, y: 0, vx: 0, vy: 0, trail: [], ripples: [], particles: [],
                 displaySensitivity: 1.0, physicsSensitivity: BASE_PHYSICS_SENSITIVITY,
                 powerups: [], lastSpawnInterval: 0, effects: { x2: 0, ion: 0, higgs: 0 },
-                wasIonActive: false
+                wasIonActive: false, gridOffsetX: 0, gridOffsetY: 0, dangerPulse: 0
             };
             
             document.body.classList.remove('death-mode', 'arcade-mode');
@@ -899,32 +991,54 @@
             if(state.mode === 'ARCADE') state.currentMaxRadius = ARCADE_MAX_RADIUS;
             else state.currentMaxRadius = CLASSIC_MAX_RADIUS;
 
-            const bSize = (state.currentMaxRadius + config.particleRadius) * 2;
-            DOM.board.style.width = `${bSize}px`;
-            DOM.board.style.height = `${bSize}px`;
-            
             DOM.uiScore.innerText = '0';
             DOM.uiMultiplier.innerText = 'x1.0';
             DOM.uiTime.innerText = '0';
             
             if (state.mode === 'ARCADE') {
                 DOM.uiSensLabel.innerText = 'STATUS';
-                DOM.uiSensitivity.innerText = '---';
+                DOM.uiSensitivity.innerText = 'STABLE';
                 DOM.uiSensSuffix.innerText = '';
-                DOM.uiSensitivity.className = "text-xl font-semibold text-gray-500";
+                DOM.uiSensitivity.className = "text-xl font-bold text-gray-500";
             } else {
                 DOM.uiSensLabel.innerText = 'SENSITIVITY';
                 DOM.uiSensitivity.innerText = '1.0';
                 DOM.uiSensSuffix.innerText = 'x';
-                DOM.uiSensitivity.className = "text-2xl font-semibold text-orange-400";
+                DOM.uiSensitivity.className = "text-2xl font-bold text-orange-400";
             }
             DOM.effectBg.className = "absolute inset-0 opacity-0 transition-opacity duration-300 z-0";
-
-            DOM.particle.classList.remove('centered', 'invincible');
             DOM.uiMultiplier.classList.remove('multiplier-glow', 'x2-glow');
-            DOM.particle.style.transform = `translate(0px, 0px)`;
+            DOM.hudAnchor.innerHTML = ''; // clear float texts
 
-            state.animFrame = requestAnimationFrame(gameLoop);
+            state.animFrame = requestAnimationFrame(loop);
+        };
+
+        const gameOver = () => {
+            state.isPlaying = false; // stops physics updates, render continues to show explosion
+            createExplosion();
+
+            const finalIntScore = Math.floor(state.score);
+            DOM.finalScore.innerText = finalIntScore.toLocaleString();
+
+            const currentModeBest = (bestScores[state.mode.toLowerCase()] || {}).score || 0;
+
+            DOM.hsEntry.classList.add('hidden');
+            DOM.savedMsg.classList.add('hidden');
+            DOM.playerName.value = '';
+            DOM.btnSave.disabled = false;
+            DOM.btnSave.innerText = 'ENCRYPT DATA';
+
+            if (finalIntScore > currentModeBest) {
+                DOM.hsEntry.classList.remove('hidden');
+            }
+
+            setTimeout(() => {
+                DOM.gameUI.classList.add('opacity-0');
+                setTimeout(() => {
+                    DOM.gameUI.classList.add('hidden');
+                    DOM.gameOverScreen.classList.remove('hidden');
+                }, 1000);
+            }, 1000); 
         };
 
         const pauseGame = () => {
@@ -943,6 +1057,8 @@
             DOM.pauseScreen.classList.add('hidden', 'opacity-0');
             DOM.gameUI.classList.add('opacity-0');
             
+            ctx.clearRect(0,0, canvas.width, canvas.height); // clear bg
+            
             setTimeout(() => {
                 DOM.gameUI.classList.add('hidden');
                 DOM.gameOverScreen.classList.add('hidden');
@@ -951,42 +1067,11 @@
             }, 500);
         };
 
-        const gameOver = () => {
-            state.isPlaying = false;
-            cancelAnimationFrame(state.animFrame);
-            triggerExplosion();
-
-            const finalIntScore = Math.floor(state.score);
-            DOM.finalScore.innerText = finalIntScore.toLocaleString();
-
-            const currentModeBest = (bestScores[state.mode.toLowerCase()] || {}).score || 0;
-
-            DOM.hsEntry.classList.add('hidden');
-            DOM.savedMsg.classList.add('hidden');
-            DOM.playerName.value = '';
-            DOM.btnSave.disabled = false;
-            DOM.btnSave.innerText = 'SAVE TO DEVICE';
-
-            if (finalIntScore > currentModeBest) {
-                DOM.hsEntry.classList.remove('hidden');
-            }
-
-            setTimeout(() => {
-                DOM.gameUI.classList.add('opacity-0');
-                setTimeout(() => {
-                    DOM.gameUI.classList.add('hidden');
-                    DOM.gameOverScreen.classList.remove('hidden');
-                }, 1000);
-            }, 1000); 
-        };
-
         DOM.btnSave.addEventListener('click', () => {
             const name = DOM.playerName.value.trim().toUpperCase();
             if (name.length !== 3) return;
             
-            const newBest = { name: name, score: Math.floor(state.score) };
-            bestScores[state.mode.toLowerCase()] = newBest;
-
+            bestScores[state.mode.toLowerCase()] = { name: name, score: Math.floor(state.score) };
             localStorage.setItem(LS_KEY, JSON.stringify(bestScores));
             loadHighscores(); 
             
@@ -994,7 +1079,7 @@
             DOM.savedMsg.classList.remove('hidden');
         });
 
-        // Permissions & Flow
+        // Setup
         const requestSensors = async () => {
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 const perm = await DeviceOrientationEvent.requestPermission();
