@@ -18,6 +18,7 @@
             --accent-glow: rgba(99, 102, 241, 0.4);
             --accent-glow-2: rgba(236, 72, 153, 0.3);
             --glow-intense: rgba(236, 72, 153, 0.8);
+            --death-glow: rgba(220, 38, 38, 0.6);
         }
 
         body {
@@ -41,6 +42,13 @@
             opacity: 0.6;
             z-index: -1;
             animation: pulse 10s ease-in-out infinite alternate;
+            transition: background 1s ease;
+        }
+
+        body.death-mode .ambient-bg {
+            background: radial-gradient(circle at 30% 30%, var(--death-glow), transparent 50%),
+                        radial-gradient(circle at 70% 70%, rgba(0,0,0,1), transparent 50%);
+            opacity: 0.8;
         }
 
         @keyframes pulse {
@@ -68,23 +76,19 @@
             margin: 0 auto;
             box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
             transition: border-color 0.4s ease, box-shadow 0.4s ease;
+            /* Will change via JS in Death mode */
         }
 
-        /* Difficulty Increase Flash */
+        body.death-mode #game-board {
+            border-color: rgba(239, 68, 68, 0.4);
+            box-shadow: inset 0 0 50px rgba(239, 68, 68, 0.2);
+        }
+
         #game-board.danger-pulse {
             border-color: rgba(249, 115, 22, 0.8) !important;
             box-shadow: inset 0 0 60px rgba(249, 115, 22, 0.4) !important;
         }
 
-        .safe-zone {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: absolute;
-        }
-        
         .center-target {
             width: 30px;
             height: 30px;
@@ -104,18 +108,25 @@
             z-index: 10;
         }
 
-        /* Center Glow Effect */
         #particle.centered {
             background: #ff7eb3;
             box-shadow: 0 0 30px #ff7eb3, 0 0 60px #ec4899, 0 0 90px var(--glow-intense);
+        }
+
+        body.death-mode #particle.centered {
+            background: #ef4444;
+            box-shadow: 0 0 30px #ef4444, 0 0 60px #dc2626, 0 0 90px #991b1b;
         }
 
         .multiplier-glow {
             text-shadow: 0 0 15px #ec4899;
             color: #ff7eb3 !important;
         }
+        body.death-mode .multiplier-glow {
+            text-shadow: 0 0 15px #dc2626;
+            color: #ef4444 !important;
+        }
 
-        /* Explosion Particles */
         .shrapnel {
             position: absolute;
             width: 6px;
@@ -160,28 +171,54 @@
     <!-- START SCREEN -->
     <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center glass-panel m-6 p-8 text-center transition-opacity duration-500">
         <h1 class="text-4xl font-light tracking-widest-xl mb-2">EQUILIBRIUM</h1>
-        <p class="text-indigo-300 text-xs tracking-widest uppercase mb-6">v5.0 Overdrive</p>
-        <p class="text-sm text-gray-400 mb-8 max-w-xs font-light">
-            Hold it in the exact center to double your multiplier. Walk to increase baseline multiplier. <br><br> <span class="text-orange-400 font-semibold">Warning:</span> Physics sensitivity strictly increases every 10 seconds.
-        </p>
-        <button id="start-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-            INITIALIZE SENSORS
-        </button>
+        <p class="text-indigo-300 text-xs tracking-widest uppercase mb-10">Select Protocol</p>
+        
+        <div class="flex flex-col gap-4 w-full max-w-xs mb-10">
+            <button id="start-normal-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                PLAY NORMAL
+            </button>
+            <button id="start-death-btn" class="px-8 py-4 bg-red-950/40 border border-red-500/50 text-red-400 rounded-full font-semibold tracking-wide hover:bg-red-900/60 hover:text-white shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+                DEATH MODE
+            </button>
+        </div>
         
         <!-- Local Highscore Display -->
-        <div class="mt-8 glass-panel p-4 w-full max-w-xs">
-            <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">Local Best</p>
-            <div class="flex justify-between items-center px-2">
-                <span id="local-best-name" class="font-semibold text-gray-300 tracking-widest">---</span>
-                <span id="local-best-score" class="font-semibold text-indigo-400">0</span>
+        <div class="glass-panel p-4 w-full max-w-xs text-left">
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-3 text-center border-b border-white/10 pb-2">Local Best Scores</p>
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-xs text-gray-400 uppercase tracking-wider">Normal</span>
+                <div class="text-right">
+                    <span id="best-normal-name" class="font-semibold text-gray-300 text-sm tracking-widest mr-2">---</span>
+                    <span id="best-normal-score" class="font-semibold text-indigo-400 text-sm">0</span>
+                </div>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-red-400/70 uppercase tracking-wider">Death</span>
+                <div class="text-right">
+                    <span id="best-death-name" class="font-semibold text-gray-300 text-sm tracking-widest mr-2">---</span>
+                    <span id="best-death-score" class="font-semibold text-red-400 text-sm">0</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- COUNTDOWN SCREEN -->
-    <div id="countdown-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center m-6 p-8 hidden">
-        <div id="countdown">3</div>
-        <p class="text-gray-400 tracking-widest-xl mt-4 uppercase text-sm">Prepare to Balance</p>
+    <!-- OPAQUE COUNTDOWN OVERLAY -->
+    <div id="countdown-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md hidden transition-opacity duration-300">
+        <div id="countdown" class="text-white">3</div>
+        <p class="text-gray-400 tracking-widest-xl mt-4 uppercase text-sm" id="countdown-msg">Prepare to Balance</p>
+    </div>
+
+    <!-- OPAQUE PAUSE OVERLAY -->
+    <div id="pause-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <h2 class="text-3xl font-light text-white tracking-widest-xl mb-10">PAUSED</h2>
+        <div class="flex flex-col gap-4 w-64">
+            <button id="resume-btn" class="px-8 py-4 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-gray-200">
+                RESUME
+            </button>
+            <button id="leave-btn" class="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/20">
+                LEAVE GAME
+            </button>
+        </div>
     </div>
 
     <!-- GAME OVER SCREEN -->
@@ -203,15 +240,22 @@
         </div>
 
         <button id="restart-btn" class="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-semibold tracking-wide hover:bg-white/20">
-            RECALIBRATE
+            MAIN MENU
         </button>
     </div>
 
     <!-- MAIN GAME UI -->
-    <div id="game-ui" class="flex-1 flex flex-col p-6 hidden opacity-0 transition-opacity duration-1000">
+    <div id="game-ui" class="flex-1 flex flex-col p-6 hidden opacity-0 transition-opacity duration-1000 relative">
+        
         <!-- Header / Stats -->
-        <header class="flex justify-between items-center mb-8">
-            <div class="glass-panel px-4 py-2 flex flex-col">
+        <header class="flex justify-between items-center mb-8 relative">
+            <!-- Pause Button -->
+            <button id="pause-btn" class="absolute left-0 top-1/2 -translate-y-1/2 p-3 glass-panel rounded-full hover:bg-white/10 z-20 text-white/70 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+
+            <!-- Spacers to center align stats next to pause btn -->
+            <div class="glass-panel px-4 py-2 flex flex-col ml-[4.5rem]">
                 <span class="text-[10px] text-gray-500 uppercase tracking-wider">Score</span>
                 <span id="ui-score" class="text-xl font-semibold transition-colors duration-300">0</span>
             </div>
@@ -224,45 +268,32 @@
         <!-- Play Area -->
         <div class="flex-1 flex items-center justify-center relative">
             <div id="game-board">
-                <div class="safe-zone"></div>
                 <div class="center-target"></div>
                 <div id="particle"></div>
             </div>
         </div>
 
-        <!-- Telemetry Data -->
-        <div class="grid grid-cols-3 gap-3 mt-8">
-            <div class="glass-panel p-3 flex flex-col justify-center text-center">
-                <span class="text-[9px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
-                    Dist
-                </span>
-                <div class="flex justify-center items-end gap-1">
-                    <span id="ui-distance" class="text-xl font-semibold">0.0</span>
-                    <span class="text-gray-400 text-xs mb-0.5">m</span>
-                </div>
-            </div>
-            
-            <div class="glass-panel p-3 flex flex-col justify-center text-center">
-                <span class="text-[9px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+        <!-- Telemetry Data (No GPS, Only Time and Sensitivity) -->
+        <div class="grid grid-cols-2 gap-4 mt-8">
+            <div class="glass-panel p-4 flex flex-col justify-center text-center">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-2">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Time
+                    Time Survived
                 </span>
                 <div class="flex justify-center items-end gap-1">
-                    <span id="ui-time" class="text-xl font-semibold">0</span>
-                    <span class="text-gray-400 text-xs mb-0.5">s</span>
+                    <span id="ui-time" class="text-2xl font-semibold">0</span>
+                    <span class="text-gray-400 text-sm mb-0.5">s</span>
                 </div>
             </div>
 
-            <!-- NEW SENSITIVITY METER -->
-            <div class="glass-panel p-3 flex flex-col justify-center text-center">
-                <span class="text-[9px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+            <div class="glass-panel p-4 flex flex-col justify-center text-center">
+                <span class="text-[10px] text-gray-500 uppercase tracking-wider mb-1 flex items-center justify-center gap-2">
                     <svg class="w-3 h-3 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    Sens
+                    Sensitivity
                 </span>
                 <div class="flex justify-center items-end gap-1">
-                    <span id="ui-sensitivity" class="text-xl font-semibold text-orange-400 transition-colors duration-300">1.0</span>
-                    <span class="text-gray-400 text-xs mb-0.5">x</span>
+                    <span id="ui-sensitivity" class="text-2xl font-semibold text-orange-400 transition-colors duration-300">1.0</span>
+                    <span class="text-gray-400 text-sm mb-0.5">x</span>
                 </div>
             </div>
         </div>
@@ -278,48 +309,61 @@
         })], { type: 'application/json' });
         document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
 
-        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v5').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+        const swCode = `self.addEventListener('install', e => e.waitUntil(caches.open('eq-v6').then(c => c.addAll(['./'])))); self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
         if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], { type: 'application/javascript' })));
     </script>
 
     <!-- Main Game Logic -->
     <script>
-        // Local Storage Handling
-        let localBestData = { name: '---', score: 0 };
-        const LS_KEY = 'equilibrium_highscore';
+        // Highscore Storage (Split by mode)
+        let bestScores = {
+            normal: { name: '---', score: 0 },
+            death: { name: '---', score: 0 }
+        };
+        const LS_KEY = 'equilibrium_v6_scores';
 
-        function loadHighscore() {
+        function loadHighscores() {
             const saved = localStorage.getItem(LS_KEY);
             if (saved) {
                 try {
-                    localBestData = JSON.parse(saved);
-                    document.getElementById('local-best-name').innerText = localBestData.name;
-                    document.getElementById('local-best-score').innerText = localBestData.score.toLocaleString();
+                    bestScores = JSON.parse(saved);
+                    document.getElementById('best-normal-name').innerText = bestScores.normal.name;
+                    document.getElementById('best-normal-score').innerText = bestScores.normal.score.toLocaleString();
+                    document.getElementById('best-death-name').innerText = bestScores.death.name;
+                    document.getElementById('best-death-score').innerText = bestScores.death.score.toLocaleString();
                 } catch(e) {
-                    console.error("Could not parse highscore", e);
+                    console.error("Could not parse highscores", e);
                 }
             }
         }
         
-        loadHighscore();
+        loadHighscores();
 
         // DOM Elements
         const DOM = {
             startScreen: document.getElementById('start-screen'),
             countdownScreen: document.getElementById('countdown-screen'),
             countdownText: document.getElementById('countdown'),
+            countdownMsg: document.getElementById('countdown-msg'),
+            pauseScreen: document.getElementById('pause-screen'),
             gameOverScreen: document.getElementById('game-over-screen'),
             gameUI: document.getElementById('game-ui'),
-            startBtn: document.getElementById('start-btn'),
-            restartBtn: document.getElementById('restart-btn'),
-            saveBtn: document.getElementById('save-score-btn'),
+            
+            btnStartNormal: document.getElementById('start-normal-btn'),
+            btnStartDeath: document.getElementById('start-death-btn'),
+            btnPause: document.getElementById('pause-btn'),
+            btnResume: document.getElementById('resume-btn'),
+            btnLeave: document.getElementById('leave-btn'),
+            btnRestart: document.getElementById('restart-btn'),
+            btnSave: document.getElementById('save-score-btn'),
+            
             particle: document.getElementById('particle'),
             board: document.getElementById('game-board'),
             uiScore: document.getElementById('ui-score'),
             uiMultiplier: document.getElementById('ui-multiplier'),
-            uiDistance: document.getElementById('ui-distance'),
             uiTime: document.getElementById('ui-time'),
             uiSensitivity: document.getElementById('ui-sensitivity'),
+            
             finalScore: document.getElementById('final-score'),
             hsEntry: document.getElementById('highscore-entry'),
             playerName: document.getElementById('player-name'),
@@ -327,65 +371,58 @@
         };
 
         const BASE_PHYSICS_SENSITIVITY = 0.05;
-
+        const BASE_MAX_RADIUS = 128; // 140 (board radius) - 12 (particle radius)
+        
         let state = {
-            isPlaying: false, score: 0, baseMultiplier: 1.0, currentMultiplier: 1.0,
-            distanceWalked: 0, timeElapsed: 0, startTime: 0,
+            isPlaying: false, 
+            isPaused: false,
+            isCountingDown: false,
+            mode: 'NORMAL', // 'NORMAL' | 'DEATH'
+            score: 0, 
+            currentMultiplier: 1.0,
+            timeElapsed: 0, 
+            lastFrameTime: 0,
+            
             x: 0, y: 0, vx: 0, vy: 0, 
-            displaySensitivity: 1.0, physicsSensitivity: 0.05,
-            startLat: null, startLon: null, geoWatchId: null, animFrame: null,
+            displaySensitivity: 1.0, 
+            physicsSensitivity: 0.05,
+            currentMaxRadius: BASE_MAX_RADIUS,
+            
+            animFrame: null,
             shrapnelElements: []
         };
 
-        const config = { boardRadius: 140, particleRadius: 12, maxRadius: 128, centerRadius: 15 };
+        const config = { particleRadius: 12, centerRadius: 15 };
 
-        // Math & Logic Helpers
-        const calculateDistance = (lat1, lon1, lat2, lon2) => {
-            const R = 6371e3, p1 = lat1 * Math.PI/180, p2 = lat2 * Math.PI/180;
-            const dp = (lat2-lat1) * Math.PI/180, dl = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(dp/2)**2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2)**2;
-            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-        };
-
+        // Hardware Listener
         const handleOrientation = (e) => {
-            if (!state.isPlaying) return;
+            if (!state.isPlaying || state.isPaused || state.isCountingDown) return;
+            
             let x = Math.max(-90, Math.min(90, e.gamma || 0));
             let y = Math.max(-90, Math.min(90, e.beta || 0));
             
-            // Apply velocity using explicitly calculated physics sensitivity
             state.vx += x * state.physicsSensitivity;
             state.vy += y * state.physicsSensitivity;
             
-            // Friction
-            state.vx *= 0.94;
+            state.vx *= 0.94; // friction
             state.vy *= 0.94;
-        };
-
-        const handlePosition = (pos) => {
-            if (!state.isPlaying) return;
-            const lat = pos.coords.latitude, lon = pos.coords.longitude;
-            if (state.startLat === null) { state.startLat = lat; state.startLon = lon; } 
-            else {
-                const dist = calculateDistance(state.startLat, state.startLon, lat, lon);
-                if (dist > state.distanceWalked) {
-                    state.distanceWalked = dist;
-                    state.baseMultiplier = 1.0 + (state.distanceWalked * 0.1);
-                    DOM.uiDistance.innerText = state.distanceWalked.toFixed(1);
-                }
-            }
         };
 
         // Effects
         const triggerExplosion = () => {
             DOM.particle.style.display = 'none';
+            const color = state.mode === 'DEATH' ? '#ef4444' : '#ff7eb3';
+            const shadow = state.mode === 'DEATH' ? '#dc2626' : '#ec4899';
+
             for (let i = 0; i < 15; i++) {
                 const shrapnel = document.createElement('div');
                 shrapnel.className = 'shrapnel';
+                shrapnel.style.background = color;
+                shrapnel.style.boxShadow = `0 0 10px ${shadow}`;
                 shrapnel.style.transform = `translate(${state.x}px, ${state.y}px)`;
                 DOM.board.appendChild(shrapnel);
                 state.shrapnelElements.push(shrapnel);
 
-                // Animate outwards
                 requestAnimationFrame(() => {
                     const angle = Math.random() * Math.PI * 2;
                     const distance = 40 + Math.random() * 80;
@@ -404,14 +441,53 @@
         };
 
         const gameLoop = () => {
-            if (!state.isPlaying) return;
+            if (!state.isPlaying || state.isPaused || state.isCountingDown) {
+                state.lastFrameTime = Date.now(); // keep delta stable while paused
+                if(state.isPlaying) state.animFrame = requestAnimationFrame(gameLoop);
+                return;
+            }
 
+            // Delta time calculation
+            const now = Date.now();
+            const dt = (now - state.lastFrameTime) / 1000;
+            state.lastFrameTime = now;
+            state.timeElapsed += dt;
+
+            // Movement
             state.x += state.vx;
             state.y += state.vy;
             const distFromCenter = Math.sqrt(state.x**2 + state.y**2);
 
-            // Check Game Over
-            if (distFromCenter > config.maxRadius) {
+            // Calculate Mode Specifics
+            let newDisplaySens = 1.0;
+            const timeInt = Math.floor(state.timeElapsed);
+            const tensPassed = Math.floor(timeInt / 10);
+            
+            if (state.mode === 'DEATH') {
+                // Death Mode: Shrinking Area & Aggressive Sensitivity
+                newDisplaySens = 1.0 + (tensPassed * 1.0); // +1.0 every 10s
+                
+                // Safe Area Shrinks over 60s, then pops back to full
+                const cycleTime = state.timeElapsed % 60; // 0 to 59.99
+                const shrinkRatio = cycleTime / 60;
+                // Shrink from 128 down to 35 (so it's still barely playable)
+                state.currentMaxRadius = BASE_MAX_RADIUS - (shrinkRatio * 93);
+                
+                const boardSize = (state.currentMaxRadius + config.particleRadius) * 2;
+                DOM.board.style.width = `${boardSize}px`;
+                DOM.board.style.height = `${boardSize}px`;
+                
+            } else {
+                // Normal Mode
+                const minsPassed = Math.floor(timeInt / 60);
+                newDisplaySens = 1.0 + (tensPassed * 0.1) + (minsPassed * 0.6); // +0.1 / 10s, +0.6 / 60s
+                state.currentMaxRadius = BASE_MAX_RADIUS; // Static
+                DOM.board.style.width = `280px`;
+                DOM.board.style.height = `280px`;
+            }
+
+            // Check Game Over Boundary
+            if (distFromCenter > state.currentMaxRadius) {
                 gameOver();
                 return;
             }
@@ -419,9 +495,9 @@
             // Apply position
             DOM.particle.style.transform = `translate(${state.x}px, ${state.y}px)`;
 
-            // Check Center Glow
+            // Check Center Glow (Multiplier)
             const isCentered = distFromCenter < config.centerRadius;
-            state.currentMultiplier = state.baseMultiplier * (isCentered ? 2 : 1);
+            state.currentMultiplier = isCentered ? 2.0 : 1.0;
             
             if (isCentered) {
                 DOM.particle.classList.add('centered');
@@ -431,30 +507,13 @@
                 DOM.uiMultiplier.classList.remove('multiplier-glow');
             }
 
-            // Time & Score calculation
-            state.timeElapsed = Math.floor((Date.now() - state.startTime) / 1000);
-            
-            // ======== DIFFICULTY SCALING ========
-            const tensPassed = Math.floor(state.timeElapsed / 10);
-            const minsPassed = Math.floor(state.timeElapsed / 60);
-            
-            // Base 1.0 + (0.1 every 10 sec) + (0.6 every 60 sec)
-            // Example at 60s: 1.0 + 0.6 + 0.6 = 2.2x Sensitivity Jump!
-            const newDisplaySens = 1.0 + (tensPassed * 0.1) + (minsPassed * 0.6);
-            
-            // Float precision rounding safety
+            // ======== SENSITIVITY UPDATE UI ========
             const safeSens = parseFloat(newDisplaySens.toFixed(1));
-
             if (safeSens !== state.displaySensitivity) {
                 state.displaySensitivity = safeSens;
-                
-                // Scale the core physics multiplier
                 state.physicsSensitivity = BASE_PHYSICS_SENSITIVITY * state.displaySensitivity;
-                
-                // Update UI visually
                 DOM.uiSensitivity.innerText = state.displaySensitivity.toFixed(1);
                 
-                // Flash the board aggressively
                 DOM.board.classList.add('danger-pulse');
                 DOM.uiSensitivity.classList.add('text-red-500', 'scale-125');
                 setTimeout(() => {
@@ -462,60 +521,126 @@
                     DOM.uiSensitivity.classList.remove('text-red-500', 'scale-125');
                 }, 500);
             }
-            // ===================================
 
-            state.score += (state.currentMultiplier * 0.16); // Accumulate over frames (~60fps)
+            // Score Accumulation (10 base points per second)
+            state.score += (state.currentMultiplier * 10 * dt); 
 
-            // Update UI efficiently
+            // Update UI
             if (Math.floor(state.score) !== parseInt(DOM.uiScore.innerText.replace(/,/g, ''))) {
                 DOM.uiScore.innerText = Math.floor(state.score).toLocaleString();
             }
-            DOM.uiTime.innerText = state.timeElapsed;
+            if (timeInt !== parseInt(DOM.uiTime.innerText)) {
+                DOM.uiTime.innerText = timeInt;
+            }
             DOM.uiMultiplier.innerText = `x${state.currentMultiplier.toFixed(1)}`;
 
             state.animFrame = requestAnimationFrame(gameLoop);
         };
 
-        const startCountdown = async () => {
-            DOM.startScreen.classList.add('opacity-0');
-            DOM.gameOverScreen.classList.add('hidden');
-            setTimeout(() => {
-                DOM.startScreen.classList.add('hidden');
-                DOM.countdownScreen.classList.remove('hidden');
+        const startCountdown = async (isResume = false) => {
+            state.isCountingDown = true;
+            
+            if (!isResume) {
+                DOM.startScreen.classList.add('opacity-0');
+                DOM.gameOverScreen.classList.add('hidden');
+                setTimeout(() => DOM.startScreen.classList.add('hidden'), 500);
+                DOM.countdownMsg.innerText = "Prepare to Balance";
+            } else {
+                DOM.pauseScreen.classList.add('opacity-0');
+                setTimeout(() => DOM.pauseScreen.classList.add('hidden'), 300);
+                DOM.countdownMsg.innerText = "Resuming Simulation";
+            }
+
+            DOM.countdownScreen.classList.remove('hidden');
+            // Give layout a tick
+            await new Promise(r => requestAnimationFrame(r));
+            DOM.countdownScreen.style.opacity = '1';
+
+            if (!isResume) {
                 DOM.gameUI.classList.remove('hidden');
-                DOM.gameUI.classList.remove('opacity-0');
-            }, 500);
+                setTimeout(() => DOM.gameUI.classList.remove('opacity-0'), 50);
+            }
 
             for (let i = 3; i > 0; i--) {
                 DOM.countdownText.innerText = i;
-                // Pop animation
                 DOM.countdownText.style.transform = 'scale(1.2)';
                 setTimeout(() => DOM.countdownText.style.transform = 'scale(1)', 200);
                 await new Promise(r => setTimeout(r, 1000));
             }
             
-            DOM.countdownScreen.classList.add('hidden');
-            startGame();
+            DOM.countdownScreen.style.opacity = '0';
+            setTimeout(() => DOM.countdownScreen.classList.add('hidden'), 300);
+            
+            if (isResume) {
+                state.isPaused = false;
+                state.isCountingDown = false;
+                state.lastFrameTime = Date.now(); // reset delta to prevent time jump
+            } else {
+                startGame();
+            }
         };
 
         const startGame = () => {
             clearExplosion();
             state = { 
-                ...state, isPlaying: true, score: 0, baseMultiplier: 1.0, currentMultiplier: 1.0, 
-                distanceWalked: 0, timeElapsed: 0, startTime: Date.now(), x: 0, y: 0, vx: 0, vy: 0, 
-                startLat: null, startLon: null,
-                displaySensitivity: 1.0, physicsSensitivity: BASE_PHYSICS_SENSITIVITY // Reset difficulty
+                ...state, 
+                isPlaying: true, isPaused: false, isCountingDown: false,
+                score: 0, currentMultiplier: 1.0, timeElapsed: 0, lastFrameTime: Date.now(),
+                x: 0, y: 0, vx: 0, vy: 0, 
+                displaySensitivity: 1.0, physicsSensitivity: BASE_PHYSICS_SENSITIVITY,
+                currentMaxRadius: BASE_MAX_RADIUS
             };
             
+            // Set UI defaults based on mode
+            if (state.mode === 'DEATH') {
+                document.body.classList.add('death-mode');
+            } else {
+                document.body.classList.remove('death-mode');
+            }
+
+            DOM.board.style.width = `280px`;
+            DOM.board.style.height = `280px`;
             DOM.uiScore.innerText = '0';
             DOM.uiMultiplier.innerText = 'x1.0';
-            DOM.uiDistance.innerText = '0.0';
             DOM.uiTime.innerText = '0';
-            DOM.uiSensitivity.innerText = '1.0'; // Reset sensitivity UI
+            DOM.uiSensitivity.innerText = '1.0';
             DOM.particle.classList.remove('centered');
             DOM.uiMultiplier.classList.remove('multiplier-glow');
+            DOM.particle.style.transform = `translate(0px, 0px)`;
 
             state.animFrame = requestAnimationFrame(gameLoop);
+        };
+
+        const pauseGame = () => {
+            if (!state.isPlaying || state.isPaused || state.isCountingDown) return;
+            state.isPaused = true;
+            DOM.pauseScreen.classList.remove('hidden');
+            
+            // Allow display block to apply before fading in
+            requestAnimationFrame(() => {
+                DOM.pauseScreen.classList.remove('opacity-0');
+            });
+        };
+
+        const quitToMainMenu = () => {
+            state.isPlaying = false;
+            state.isPaused = false;
+            cancelAnimationFrame(state.animFrame);
+            window.removeEventListener('deviceorientation', handleOrientation);
+            
+            DOM.pauseScreen.classList.add('hidden');
+            DOM.pauseScreen.classList.add('opacity-0');
+            DOM.gameUI.classList.add('opacity-0');
+            
+            setTimeout(() => {
+                DOM.gameUI.classList.add('hidden');
+                DOM.gameOverScreen.classList.add('hidden');
+                DOM.startScreen.classList.remove('hidden');
+                
+                requestAnimationFrame(() => {
+                    DOM.startScreen.classList.remove('opacity-0');
+                });
+            }, 500);
         };
 
         const gameOver = () => {
@@ -526,15 +651,16 @@
             const finalIntScore = Math.floor(state.score);
             DOM.finalScore.innerText = finalIntScore.toLocaleString();
 
-            // Handle Highscore UI
+            // Check against current mode's highscore
+            const currentModeBest = state.mode === 'NORMAL' ? bestScores.normal.score : bestScores.death.score;
+
             DOM.hsEntry.classList.add('hidden');
             DOM.savedMsg.classList.add('hidden');
             DOM.playerName.value = '';
-            DOM.saveBtn.disabled = false;
-            DOM.saveBtn.innerText = 'SAVE TO DEVICE';
+            DOM.btnSave.disabled = false;
+            DOM.btnSave.innerText = 'SAVE TO DEVICE';
 
-            // Show input if it's better than current local best
-            if (finalIntScore > localBestData.score) {
+            if (finalIntScore > currentModeBest) {
                 DOM.hsEntry.classList.remove('hidden');
             }
 
@@ -547,50 +673,48 @@
             }, 1000); 
         };
 
-        // Local Storage Save Function
-        DOM.saveBtn.addEventListener('click', () => {
+        // Saves to the respective mode
+        DOM.btnSave.addEventListener('click', () => {
             const name = DOM.playerName.value.trim().toUpperCase();
             if (name.length !== 3) return;
             
-            const newBest = {
-                name: name,
-                score: Math.floor(state.score),
-                timestamp: Date.now()
-            };
+            const newBest = { name: name, score: Math.floor(state.score) };
+            
+            if (state.mode === 'NORMAL') bestScores.normal = newBest;
+            if (state.mode === 'DEATH') bestScores.death = newBest;
 
-            localStorage.setItem(LS_KEY, JSON.stringify(newBest));
-            loadHighscore(); // Update UI
+            localStorage.setItem(LS_KEY, JSON.stringify(bestScores));
+            loadHighscores(); // Refresh text on start screen
             
             DOM.hsEntry.classList.add('hidden');
             DOM.savedMsg.classList.remove('hidden');
         });
 
-        // Permissions & Hardware Listeners
-        const requestPermissions = async () => {
+        // Permissions & Flow Triggers
+        const initGameMode = async (modeName) => {
+            state.mode = modeName;
             try {
                 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                     const perm = await DeviceOrientationEvent.requestPermission();
                     if (perm !== 'granted') return alert('Tilt permission required.');
                 }
-                
                 window.addEventListener('deviceorientation', handleOrientation);
-                
-                if ("geolocation" in navigator) {
-                    if (state.geoWatchId) navigator.geolocation.clearWatch(state.geoWatchId);
-                    state.geoWatchId = navigator.geolocation.watchPosition(
-                        handlePosition, (err) => console.warn("GPS:", err.message),
-                        { enableHighAccuracy: true, maximumAge: 0 }
-                    );
-                }
-                startCountdown();
+                startCountdown(false);
             } catch (err) {
                 console.error(err);
                 alert('Sensor initialization failed. Please use a compatible mobile device.');
             }
         };
 
-        DOM.startBtn.addEventListener('click', requestPermissions);
-        DOM.restartBtn.addEventListener('click', startCountdown);
+        // Event Listeners
+        DOM.btnStartNormal.addEventListener('click', () => initGameMode('NORMAL'));
+        DOM.btnStartDeath.addEventListener('click', () => initGameMode('DEATH'));
+        
+        DOM.btnPause.addEventListener('click', pauseGame);
+        DOM.btnResume.addEventListener('click', () => startCountdown(true));
+        DOM.btnLeave.addEventListener('click', quitToMainMenu);
+        
+        DOM.btnRestart.addEventListener('click', quitToMainMenu);
 
     </script>
 </body>
